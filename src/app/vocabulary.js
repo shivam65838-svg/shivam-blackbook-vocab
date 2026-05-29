@@ -1,59 +1,178 @@
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import {
+    FlatList,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { VocabCard } from '@/components/vocab-card';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { VOCABULARY } from '@/data/vocabulary';
-import { useTheme } from '@/hooks/use-theme';
+import { Footer } from "@/components/footer";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { VocabCard } from "@/components/vocab-card";
+import { BottomTabInset, Spacing } from "@/constants/theme";
+import { VOCABULARY } from "@/data/vocabulary";
+import { useTheme } from "@/hooks/use-theme";
+import { useVocabProgress } from "@/hooks/use-vocab-progress";
+
+const CATEGORIES = [
+  "All",
+  "Words",
+  "Synonyms",
+  "Antonyms",
+  "One Word Substitution",
+  "Idioms & Phrases",
+  "Phrasal Verbs",
+  "Root Words",
+];
 
 export default function VocabularyScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
 
-  const filtered = useMemo(
-    () =>
-      VOCABULARY.filter((item) =>
-        item.word.toLowerCase().includes(query.toLowerCase()) ||
-        item.hindiMeaning.toLowerCase().includes(query.toLowerCase())
-      ),
-    [query]
+  const { getStatus, markLearned, markPending } = useVocabProgress();
+
+  const filtered = useMemo(() => {
+    const q = (query || "").trim().toLowerCase();
+
+    return VOCABULARY.filter((rawItem) => {
+      const item = { ...rawItem };
+      const itemCategory =
+        item.category && typeof item.category === "string"
+          ? item.category
+          : "Words";
+
+      if (category !== "All" && itemCategory !== category) {
+        return false;
+      }
+
+      if (!q) {
+        return true;
+      }
+
+      const word = (item.word || "").toString().toLowerCase();
+      const hindi = (item.hindiMeaning || "").toString().toLowerCase();
+      const meaning = (item.meaning || "").toString().toLowerCase();
+      const example = (item.example || "").toString().toLowerCase();
+
+      const synonyms = Array.isArray(item.synonyms)
+        ? item.synonyms.join(" ").toLowerCase()
+        : (item.synonyms || "").toString().toLowerCase();
+      const antonyms = Array.isArray(item.antonyms)
+        ? item.antonyms.join(" ").toLowerCase()
+        : (item.antonyms || "").toString().toLowerCase();
+
+      return (
+        word.includes(q) ||
+        hindi.includes(q) ||
+        meaning.includes(q) ||
+        example.includes(q) ||
+        synonyms.includes(q) ||
+        antonyms.includes(q)
+      );
+    });
+  }, [query, category]);
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <ThemedText type="subtitle">Vocabulary</ThemedText>
+      <ThemedText
+        type="default"
+        themeColor="textSecondary"
+        style={styles.description}
+      >
+        Swipe through premium cards, review Hindi meanings, and reinforce memory
+        with mnemonics.
+      </ThemedText>
+
+      <View style={styles.searchRow}>
+        <TextInput
+          style={[
+            styles.searchInput,
+            { backgroundColor: theme.surface, color: theme.text },
+          ]}
+          placeholder="Search words"
+          placeholderTextColor={theme.textSecondary}
+          value={query}
+          onChangeText={setQuery}
+          returnKeyType="search"
+          accessibilityLabel="Search vocabulary"
+        />
+        <Pressable
+          style={[styles.searchButton, { backgroundColor: theme.accent }]}
+          onPress={() => router.push("/search")}
+          accessibilityLabel="Open search screen"
+        >
+          <ThemedText type="smallBold">Open search screen</ThemedText>
+        </Pressable>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterBar}
+        accessibilityRole="toolbar"
+      >
+        {CATEGORIES.map((cat) => {
+          const selected = cat === category;
+          return (
+            <Pressable
+              key={cat}
+              onPress={() => setCategory(cat)}
+              style={[
+                styles.filterButton,
+                {
+                  backgroundColor: selected ? theme.accent : "transparent",
+                  borderColor: selected ? theme.accent : theme.textSecondary,
+                },
+              ]}
+              accessibilityState={{ selected }}
+            >
+              <ThemedText
+                type={selected ? "smallBold" : "default"}
+                style={selected ? styles.filterTextSelected : styles.filterText}
+              >
+                {cat}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 
   return (
-    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>      
+    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
       <SafeAreaView style={styles.safeArea}>
         <FlatList
           data={filtered}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={
-            <View style={styles.header}>
-              <ThemedText type="subtitle">Vocabulary</ThemedText>
-              <ThemedText type="default" themeColor="textSecondary" style={styles.description}>
-                Swipe through premium cards, review Hindi meanings, and reinforce memory with mnemonics.
-              </ThemedText>
-              <TextInput
-                style={[styles.searchInput, { backgroundColor: theme.surface, color: theme.text }]}
-                placeholder="Search words"
-                placeholderTextColor={theme.textSecondary}
-                value={query}
-                onChangeText={setQuery}
+          keyExtractor={(item) => (item.id ? item.id.toString() : item.word)}
+          ListHeaderComponent={renderHeader}
+          renderItem={({ item }) => (
+            <View style={styles.listItem}>
+              <VocabCard
+                item={{ ...item, category: item.category ?? "Words" }}
+                status={getStatus(item)}
+                onLearned={() => markLearned(item)}
+                onPending={() => markPending(item)}
               />
-              <Pressable style={[styles.searchButton, { backgroundColor: theme.accent }]} onPress={() => router.push('/search')}>
-                <ThemedText type="smallBold">Open search screen</ThemedText>
-              </Pressable>
             </View>
-          }
-          renderItem={({ item }) => <VocabCard item={item} onPress={() => {}} />}
-          horizontal
-          showsHorizontalScrollIndicator={false}
+          )}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.cardList}
+          ListFooterComponent={() => <Footer />}
           ListEmptyComponent={() => (
-            <ThemedText type="default" style={styles.emptyText} themeColor="textSecondary">
+            <ThemedText
+              type="default"
+              style={styles.emptyText}
+              themeColor="textSecondary"
+            >
               No words found.
             </ThemedText>
           )}
@@ -79,23 +198,53 @@ const styles = StyleSheet.create({
   description: {
     lineHeight: 24,
   },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
   searchInput: {
+    flex: 1,
     borderRadius: Spacing.five,
     padding: Spacing.three,
     fontSize: 16,
   },
   searchButton: {
     borderRadius: Spacing.five,
-    padding: Spacing.three,
-    alignItems: 'center',
-    marginTop: Spacing.two,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    alignItems: "center",
+    marginLeft: Spacing.two,
+  },
+  filterBar: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    alignItems: "center",
+  },
+  filterButton: {
+    borderRadius: 999,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    marginRight: Spacing.two,
+    borderWidth: 1,
+  },
+  filterText: {
+    fontSize: 14,
+  },
+  filterTextSelected: {
+    fontSize: 14,
+    color: "#fff",
   },
   cardList: {
     paddingHorizontal: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.six,
+    paddingTop: Spacing.two,
+  },
+  listItem: {
+    marginBottom: Spacing.three,
   },
   emptyText: {
     padding: Spacing.four,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

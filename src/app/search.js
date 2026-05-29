@@ -1,28 +1,33 @@
-import React from 'react';
-import { FlatList, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from "react";
+import { FlatList, StyleSheet, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { VOCABULARY } from '@/data/vocabulary';
-import { useTheme } from '@/hooks/use-theme';
+import { Footer } from "@/components/footer";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { BottomTabInset, Spacing } from "@/constants/theme";
+import { VOCABULARY } from "@/data/vocabulary";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function SearchScreen() {
   const theme = useTheme();
-  const [query, setQuery] = React.useState('');
-  const results = VOCABULARY.filter((item) =>
-    item.word.toLowerCase().includes(query.toLowerCase()) ||
-    item.hindiMeaning.toLowerCase().includes(query.toLowerCase())
+  const [query, setQuery] = React.useState("");
+  const results = VOCABULARY.filter(
+    (item) =>
+      item.word.toLowerCase().includes(query.toLowerCase()) ||
+      item.hindiMeaning.toLowerCase().includes(query.toLowerCase()),
   );
 
   return (
-    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>      
+    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
       <SafeAreaView style={styles.safeArea}>
-        <View style={[styles.header, { backgroundColor: theme.surface }]}>          
+        <View style={[styles.header, { backgroundColor: theme.surface }]}>
           <ThemedText type="subtitle">Search vocabulary</ThemedText>
           <TextInput
-            style={[styles.searchInput, { backgroundColor: theme.backgroundElement, color: theme.text }]}
+            style={[
+              styles.searchInput,
+              { backgroundColor: theme.backgroundElement, color: theme.text },
+            ]}
             placeholder="Search word or Hindi meaning"
             placeholderTextColor={theme.textSecondary}
             value={query}
@@ -36,7 +41,9 @@ export default function SearchScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <ThemedView style={[styles.card, { backgroundColor: theme.surface }]}>              
+            <ThemedView
+              style={[styles.card, { backgroundColor: theme.surface }]}
+            >
               <View style={styles.cardHeader}>
                 <ThemedText type="subtitle">{item.word}</ThemedText>
                 <ThemedText type="small" themeColor="accent">
@@ -54,8 +61,13 @@ export default function SearchScreen() {
               </ThemedText>
             </ThemedView>
           )}
+          ListFooterComponent={() => <Footer />}
           ListEmptyComponent={() => (
-            <ThemedText type="default" style={styles.emptyText} themeColor="textSecondary">
+            <ThemedText
+              type="default"
+              style={styles.emptyText}
+              themeColor="textSecondary"
+            >
               No vocabulary found.
             </ThemedText>
           )}
@@ -92,8 +104,8 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     gap: Spacing.two,
   },
   label: {
@@ -101,6 +113,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: Spacing.four,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

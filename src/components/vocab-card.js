@@ -1,18 +1,27 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRef } from 'react';
-import { Animated, PanResponder, Pressable, StyleSheet, View } from 'react-native';
+import { LinearGradient } from "expo-linear-gradient";
+import { useRef } from "react";
+import {
+  Animated,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from "@/components/themed-text";
+import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
-export function VocabCard({ item, onPress }) {
+export function VocabCard({ item, status = "New", onLearned, onPending }) {
   const theme = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
 
   const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_evt, gestureState) => Math.abs(gestureState.dx) > 10,
-    onPanResponderMove: Animated.event([null, { dx: translateX }], { useNativeDriver: false }),
+    onMoveShouldSetPanResponder: (_evt, gestureState) =>
+      Math.abs(gestureState.dx) > 10,
+    onPanResponderMove: Animated.event([null, { dx: translateX }], {
+      useNativeDriver: false,
+    }),
     onPanResponderRelease: (_evt, gestureState) => {
       const direction = gestureState.dx > 0 ? 1 : -1;
       const threshold = 110;
@@ -23,7 +32,6 @@ export function VocabCard({ item, onPress }) {
           useNativeDriver: false,
         }).start(() => {
           translateX.setValue(0);
-          onPress?.();
         });
       } else {
         Animated.spring(translateX, {
@@ -39,17 +47,38 @@ export function VocabCard({ item, onPress }) {
     backgroundColor: theme.surface,
   };
 
+  const statusColor =
+    status === "Learned"
+      ? "#10B981"
+      : status === "Pending"
+        ? "#F59E0B"
+        : theme.accent;
+
   return (
-    <Animated.View style={[styles.card, cardStyle]} {...panResponder.panHandlers}>
+    <Animated.View
+      style={[styles.card, cardStyle]}
+      {...panResponder.panHandlers}
+    >
       <LinearGradient
-        colors={[theme.accent, '#1F2434']}
+        colors={[theme.accent, "#1F2434"]}
         start={[0, 0]}
         end={[1, 1]}
         style={styles.gradient}
       >
-        <ThemedText type="smallBold" style={styles.category} themeColor="text">
-          {item.category}
-        </ThemedText>
+        <View style={styles.categoryRow}>
+          <ThemedText
+            type="smallBold"
+            style={styles.category}
+            themeColor="text"
+          >
+            {item.category}
+          </ThemedText>
+          <View style={[styles.statusPill, { backgroundColor: statusColor }]}>
+            <ThemedText type="smallBold" style={styles.statusText}>
+              {status}
+            </ThemedText>
+          </View>
+        </View>
         <ThemedText type="title" style={styles.word}>
           {item.word}
         </ThemedText>
@@ -82,20 +111,34 @@ export function VocabCard({ item, onPress }) {
         </ThemedText>
       </View>
 
-      <Pressable onPress={onPress} style={styles.button}>
-        <ThemedText type="smallBold">Next card</ThemedText>
-      </Pressable>
+      <View style={styles.actionRow}>
+        <Pressable
+          onPress={onLearned}
+          style={[styles.actionButton, { backgroundColor: theme.accent }]}
+        >
+          <ThemedText type="smallBold">✓ Learned</ThemedText>
+        </Pressable>
+        <Pressable
+          onPress={onPending}
+          style={[
+            styles.actionButton,
+            { backgroundColor: theme.backgroundElement },
+          ]}
+        >
+          <ThemedText type="smallBold">📖 Pending Revision</ThemedText>
+        </Pressable>
+      </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    width: 320,
+    width: "100%",
     borderRadius: Spacing.five,
     padding: Spacing.four,
-    marginRight: Spacing.four,
-    shadowColor: '#000',
+    marginRight: 0,
+    shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 5,
@@ -106,9 +149,23 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.four,
     gap: Spacing.two,
   },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
   category: {
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
+  },
+  statusPill: {
+    borderRadius: 999,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  statusText: {
+    color: "#FFFFFF",
   },
   word: {
     fontSize: 42,
@@ -122,11 +179,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 30,
   },
-  button: {
-    marginTop: Spacing.two,
+  actionRow: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: Spacing.five,
     paddingVertical: Spacing.three,
-    borderRadius: 999,
-    alignItems: 'center',
-    backgroundColor: '#30365B',
+    alignItems: "center",
   },
 });

@@ -1,35 +1,73 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from "react-native";
 
-import { ProgressBar } from '@/components/progress-bar';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ProgressBar } from "@/components/progress-bar";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
-export function DailyTargetCard({ wordsLearned = 24, goal = 30, streak = 5 }) {
+export function DailyTargetCard({
+  totalWords = 0,
+  learnedWords = 0,
+  pendingWords = 0,
+  dailyTarget = 30,
+  completedToday = 0,
+  remainingToday = 0,
+}) {
   const theme = useTheme();
-  const completion = Math.min(Math.max(wordsLearned / goal, 0), 1);
+  const completion = Math.min(
+    Math.max(dailyTarget > 0 ? completedToday / dailyTarget : 0, 0),
+    1,
+  );
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: theme.surface }]}>      
+    <ThemedView style={[styles.container, { backgroundColor: theme.surface }]}>
       <View style={styles.topRow}>
         <View>
           <ThemedText type="small" themeColor="textSecondary">
-            Daily target
+            Today's target
           </ThemedText>
-          <ThemedText type="subtitle">{wordsLearned}/{goal} words</ThemedText>
+          <ThemedText type="subtitle">{dailyTarget} words</ThemedText>
         </View>
-        <View style={[styles.badge, { backgroundColor: theme.backgroundElement }]}>          
-          <ThemedText type="smallBold" themeColor="accent">{streak} day streak</ThemedText>
+        <View style={styles.metricStack}>
+          <View style={styles.metricItem}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Completed
+            </ThemedText>
+            <ThemedText type="subtitle">{completedToday}</ThemedText>
+          </View>
+          <View style={styles.metricItem}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Remaining
+            </ThemedText>
+            <ThemedText type="subtitle">{remainingToday}</ThemedText>
+          </View>
         </View>
       </View>
 
       <ProgressBar value={completion} />
 
       <View style={styles.bottomRow}>
-        <ThemedText type="small" themeColor="textSecondary">
-          Keep the streak alive by learning at least 6 more words today.
-        </ThemedText>
+        <View style={styles.metricRow}>
+          <View style={styles.metricCard}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Total words
+            </ThemedText>
+            <ThemedText type="subtitle">{totalWords}</ThemedText>
+          </View>
+          <View style={styles.metricCard}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Learned
+            </ThemedText>
+            <ThemedText type="subtitle">{learnedWords}</ThemedText>
+          </View>
+          <View style={styles.metricCard}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Pending
+            </ThemedText>
+            <ThemedText type="subtitle">{pendingWords}</ThemedText>
+          </View>
+        </View>
       </View>
     </ThemedView>
   );
@@ -42,18 +80,30 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: Spacing.four,
+  },
+  metricStack: {
+    alignItems: "flex-end",
     gap: Spacing.two,
   },
-  badge: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
+  metricItem: {
+    alignItems: "flex-end",
   },
   bottomRow: {
     marginTop: Spacing.three,
+  },
+  metricRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: Spacing.two,
+  },
+  metricCard: {
+    flex: 1,
+    borderRadius: Spacing.five,
+    padding: Spacing.three,
+    backgroundColor: "rgba(255,255,255,0.04)",
   },
 });

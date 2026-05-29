@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: ['universe/native'],
+  extends: ["universe/native"],
   rules: {
     // Add custom rules here if needed.
   },

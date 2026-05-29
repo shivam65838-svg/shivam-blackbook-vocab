@@ -1,0 +1,363 @@
+[
+  {
+    "word": "Abandon",
+    "meaning": "त्याग देना",
+    "mnemonic": "A-Band-On → बैंड छोड़ दिया = त्याग देना",
+    "example": "He abandoned the plan."
+  },
+  {
+    "word": "Ability",
+    "meaning": "योग्यता",
+    "mnemonic": "Ability = Able होना = योग्य होना",
+    "example": "She has the ability to learn quickly."
+  },
+  {
+    "word": "Able",
+    "meaning": "सक्षम",
+    "mnemonic": "Able = कर सकने वाला",
+    "example": "He is able to solve the problem."
+  },
+  {
+    "word": "Abnormal",
+    "meaning": "असामान्य",
+    "mnemonic": "Normal नहीं = Abnormal",
+    "example": "His behavior was abnormal."
+  },
+  {
+    "word": "Abolish",
+    "meaning": "समाप्त करना",
+    "mnemonic": "Abolish = पूरी तरह खत्म",
+    "example": "The law was abolished."
+  },
+  {
+    "word": "Abroad",
+    "meaning": "विदेश में",
+    "mnemonic": "A broad world outside = विदेश",
+    "example": "He studies abroad."
+  },
+  {
+    "word": "Absence",
+    "meaning": "अनुपस्थिति",
+    "mnemonic": "Absent रहने की स्थिति",
+    "example": "His absence was noticed."
+  },
+  {
+    "word": "Absolute",
+    "meaning": "पूर्ण",
+    "mnemonic": "Absolutely complete",
+    "example": "This is an absolute truth."
+  },
+  {
+    "word": "Absorb",
+    "meaning": "सोख लेना",
+    "mnemonic": "Sponge absorbs water",
+    "example": "Plants absorb water."
+  },
+  {
+    "word": "Abstract",
+    "meaning": "सारांश",
+    "mnemonic": "Abstract = Short summary",
+    "example": "Read the abstract first."
+  }
+,
+{
+  "word": "Account",
+  "meaning": "खाता",
+  "mnemonic": "Bank Account",
+  "example": "I opened a new account."
+},
+{
+  "word": "Accuse",
+  "meaning": "आरोप लगाना",
+  "mnemonic": "Accuse = दोष देना",
+  "example": "He accused me of lying."
+},
+{
+  "word": "Acquaint",
+  "meaning": "परिचित कराना",
+  "mnemonic": "Acquaint = परिचय",
+  "example": "Let me acquaint you with him."
+},
+{
+  "word": "Action",
+  "meaning": "कार्यवाही",
+  "mnemonic": "Action = काम",
+  "example": "Action is needed."
+},
+{
+  "word": "Active",
+  "meaning": "सक्रिय",
+  "mnemonic": "Active = हमेशा काम में",
+  "example": "He is very active."
+},
+{
+  "word": "Actual",
+  "meaning": "वास्तविक",
+  "mnemonic": "Actual = सच",
+  "example": "Tell me the actual reason."
+},
+{
+  "word": "Adaptable",
+  "meaning": "अनुकूलनीय",
+  "mnemonic": "Adapt करने वाला",
+  "example": "She is adaptable."
+},
+{
+  "word": "Addition",
+  "meaning": "जोड़",
+  "mnemonic": "Add = जोड़ना",
+  "example": "Addition is easy."
+},
+{
+  "word": "Address",
+  "meaning": "पता",
+  "mnemonic": "Address = location",
+  "example": "Write your address."
+},
+{
+  "word": "Adjust",
+  "meaning": "समायोजित करना",
+  "mnemonic": "Adjust = ठीक करना",
+  "example": "Adjust the chair."
+},
+{
+  "word": "Administration",
+  "meaning": "प्रशासन",
+  "mnemonic": "Admin = प्रशासन",
+  "example": "The administration acted quickly."
+},
+{
+  "word": "Adventure",
+  "meaning": "रोमांच",
+  "mnemonic": "Adventure trip",
+  "example": "We had an adventure."
+},
+{
+  "word": "Advice",
+  "meaning": "सलाह",
+  "mnemonic": "Advice = सलाह",
+  "example": "He gave good advice."
+},
+{
+  "word": "Affection",
+  "meaning": "स्नेह",
+  "mnemonic": "Affection = प्यार",
+  "example": "She showed affection."
+},
+{
+  "word": "Affirm",
+  "meaning": "पुष्टि करना",
+  "mnemonic": "Affirm = confirm",
+  "example": "He affirmed the statement."
+},
+{
+  "word": "Against",
+  "meaning": "विरुद्ध",
+  "mnemonic": "Against = opposite",
+  "example": "He is against corruption."
+},
+{
+  "word": "Agreement",
+  "meaning": "समझौता",
+  "mnemonic": "Agree = मानना",
+  "example": "We signed an agreement."
+},
+{
+  "word": "Agriculture",
+  "meaning": "कृषि",
+  "mnemonic": "Agri = खेती",
+  "example": "Agriculture is important."
+},
+{
+  "word": "Aim",
+  "meaning": "लक्ष्य",
+  "mnemonic": "Aim = निशाना",
+  "example": "My aim is success."
+},
+{
+  "word": "Alarm",
+  "meaning": "चेतावनी",
+  "mnemonic": "Alarm clock",
+  "example": "The alarm rang."
+},
+{
+  "word": "Allege",
+  "meaning": "आरोप लगाना",
+  "mnemonic": "Allege = claim",
+  "example": "They alleged fraud."
+},
+{
+  "word": "Alliance",
+  "meaning": "गठबंधन",
+  "mnemonic": "Alliance = साथ आना",
+  "example": "The alliance was formed."
+},
+{
+  "word": "Allow",
+  "meaning": "अनुमति देना",
+  "mnemonic": "Allow = permit",
+  "example": "Allow me to help."
+},
+{
+  "word": "Ally",
+  "meaning": "मित्र राष्ट्र",
+  "mnemonic": "Ally = दोस्त",
+  "example": "The country is our ally."
+},
+{
+  "word": "Amazing",
+  "meaning": "अद्भुत",
+  "mnemonic": "Amazing = wow",
+  "example": "It was amazing."
+},
+{
+  "word": "Analysis",
+  "meaning": "विश्लेषण",
+  "mnemonic": "Analysis = जांच",
+  "example": "The analysis was detailed."
+},
+{
+  "word": "Ancestor",
+  "meaning": "पूर्वज",
+  "mnemonic": "Ancestor = दादा-परदादा",
+  "example": "Our ancestors lived here."
+},
+{
+  "word": "Angle",
+  "meaning": "कोण",
+  "mnemonic": "Math angle",
+  "example": "Measure the angle."
+},
+{
+  "word": "Annoy",
+  "meaning": "परेशान करना",
+  "mnemonic": "Annoy = irritate",
+  "example": "Don't annoy me."
+},
+{
+  "word": "Answer",
+  "meaning": "उत्तर",
+  "mnemonic": "Answer = जवाब",
+  "example": "Give the answer."
+},
+{
+  "word": "Anxious",
+  "meaning": "चिंतित",
+  "mnemonic": "Anxiety = चिंता",
+  "example": "She felt anxious."
+},
+{
+  "word": "Apart",
+  "meaning": "अलग",
+  "mnemonic": "Apart = separate",
+  "example": "Keep them apart."
+},
+{
+  "word": "Apology",
+  "meaning": "माफी",
+  "mnemonic": "Apology = sorry",
+  "example": "He offered an apology."
+},
+{
+  "word": "Appear",
+  "meaning": "प्रकट होना",
+  "mnemonic": "Appear = दिखाई देना",
+  "example": "A rainbow appeared."
+},
+{
+  "word": "Application",
+  "meaning": "आवेदन",
+  "mnemonic": "Application form",
+  "example": "Submit the application."
+},
+{
+  "word": "Apply",
+  "meaning": "आवेदन करना",
+  "mnemonic": "Apply = apply करना",
+  "example": "Apply for the job."
+},
+{
+  "word": "Approve",
+  "meaning": "स्वीकृत करना",
+  "mnemonic": "Approve = मंजूर",
+  "example": "The plan was approved."
+},
+{
+  "word": "Argument",
+  "meaning": "तर्क",
+  "mnemonic": "Argument = बहस",
+  "example": "They had an argument."
+},
+{
+  "word": "Army",
+  "meaning": "सेना",
+  "mnemonic": "Army = फौज",
+  "example": "The army arrived."
+},
+{
+  "word": "Article",
+  "meaning": "लेख",
+  "mnemonic": "Article = लेख",
+  "example": "I read an article."
+},
+{
+  "word": "Ashamed",
+  "meaning": "शर्मिंदा",
+  "mnemonic": "Ashamed = शर्म",
+  "example": "He felt ashamed."
+},
+{
+  "word": "Assist",
+  "meaning": "सहायता करना",
+  "mnemonic": "Assist = help",
+  "example": "Can you assist me?"
+},
+{
+  "word": "Associate",
+  "meaning": "संबंधित करना",
+  "mnemonic": "Associate = जोड़ना",
+  "example": "I associate success with hard work."
+},
+{
+  "word": "Assume",
+  "meaning": "मान लेना",
+  "mnemonic": "Assume = suppose",
+  "example": "Don't assume anything."
+},
+{
+  "word": "Assure",
+  "meaning": "आश्वासन देना",
+  "mnemonic": "Assure = विश्वास दिलाना",
+  "example": "I assure you."
+},
+{
+  "word": "Attempt",
+  "meaning": "प्रयास",
+  "mnemonic": "Attempt = कोशिश",
+  "example": "He made an attempt."
+},
+{
+  "word": "Attend",
+  "meaning": "उपस्थित होना",
+  "mnemonic": "Attend = शामिल होना",
+  "example": "Attend the meeting."
+},
+{
+  "word": "Attention",
+  "meaning": "ध्यान",
+  "mnemonic": "Attention = focus",
+  "example": "Pay attention."
+},
+{
+  "word": "Attitude",
+  "meaning": "दृष्टिकोण",
+  "mnemonic": "Attitude = सोच",
+  "example": "She has a positive attitude."
+},
+{
+  "word": "Attract",
+  "meaning": "आकर्षित करना",
+  "mnemonic": "Attract = खींचना",
+  "example": "Flowers attract bees."
+}
+]

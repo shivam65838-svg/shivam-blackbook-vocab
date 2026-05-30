@@ -180,8 +180,9 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   heroTitle: {
-    fontSize: 34,
-    lineHeight: 42,
+    fontSize: 26,
+    lineHeight: 34,
+    textAlign: "center",
   },
   heroSubtitle: {
     lineHeight: 24,
@@ -198,10 +199,10 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
   },
   sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: Spacing.three,
+    flexDirection: "column",
+    
+    alignItems: "flex-start",
+    gap: Spacing.two,
   },
   badge: {
     borderRadius: 999,
@@ -211,9 +212,10 @@ const styles = StyleSheet.create({
   },
   flashcard: {
     borderRadius: Spacing.five,
-    flexDirection: "row",
+    flexDirection: "column",
     padding: Spacing.four,
     gap: Spacing.four,
+     alignItems: "center",
   },
   flashcardIcon: {
     width: 64,
@@ -228,6 +230,11 @@ const styles = StyleSheet.create({
   flashcardWord: {
     fontSize: 26,
     lineHeight: 34,
+  },
+  quickActions: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: Spacing.three,
   },
   actionCard: {
     flex: 1,

@@ -5,11 +5,13 @@ import { Footer } from "@/components/footer";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, Spacing } from "@/constants/theme";
-import { VOCABULARY } from "@/data/vocabulary";
 import { useTheme } from "@/hooks/use-theme";
+import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 export default function RevisionScreen() {
   const theme = useTheme();
+
+  const { items: vocabulary } = useVocabularyData();
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
@@ -69,7 +71,7 @@ export default function RevisionScreen() {
             </View>
           </View>
 
-          {VOCABULARY.slice(0, 3).map((item) => (
+          {vocabulary.slice(0, 3).map((item) => (
             <View
               key={item.id}
               style={[styles.card, { backgroundColor: theme.surface }]}

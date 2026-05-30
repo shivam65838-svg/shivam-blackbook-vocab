@@ -15,20 +15,9 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { VocabCard } from "@/components/vocab-card";
 import { BottomTabInset, Spacing } from "@/constants/theme";
-import { VOCABULARY } from "@/data/vocabulary";
 import { useTheme } from "@/hooks/use-theme";
 import { useVocabProgress } from "@/hooks/use-vocab-progress";
-
-const CATEGORIES = [
-  "All",
-  "Words",
-  "Synonyms",
-  "Antonyms",
-  "One Word Substitution",
-  "Idioms & Phrases",
-  "Phrasal Verbs",
-  "Root Words",
-];
+import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 export default function VocabularyScreen() {
   const theme = useTheme();
@@ -36,12 +25,13 @@ export default function VocabularyScreen() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
 
+  const { items: vocabulary, categories: CATEGORIES } = useVocabularyData();
   const { getStatus, markLearned, markPending } = useVocabProgress();
 
   const filtered = useMemo(() => {
     const q = (query || "").trim().toLowerCase();
 
-    return VOCABULARY.filter((rawItem) => {
+    return vocabulary.filter((rawItem) => {
       const item = { ...rawItem };
       const itemCategory =
         item.category && typeof item.category === "string"

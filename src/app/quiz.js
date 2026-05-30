@@ -12,8 +12,8 @@ import { Footer } from "@/components/footer";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, Spacing } from "@/constants/theme";
-import { VOCABULARY } from "@/data/vocabulary";
 import { useTheme } from "@/hooks/use-theme";
+import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 const getOptions = (word, vocabulary) => {
   const wrongAnswers = vocabulary
@@ -30,11 +30,13 @@ export default function QuizScreen() {
   const [selected, setSelected] = useState(null);
   const [feedback, setFeedback] = useState("");
 
-  const questionData = VOCABULARY[currentIndex];
-  const options = useMemo(
-    () => getOptions(questionData, VOCABULARY),
-    [currentIndex, questionData],
-  );
+  const { items: vocabulary } = useVocabularyData();
+
+  const questionData = vocabulary.length > 0 ? vocabulary[currentIndex % vocabulary.length] : null;
+  const options = useMemo(() => {
+    if (!questionData) return [];
+    return getOptions(questionData, vocabulary);
+  }, [currentIndex, questionData, vocabulary]);
 
   const handleSelect = (option) => {
     setSelected(option);
@@ -48,7 +50,7 @@ export default function QuizScreen() {
   const handleNext = () => {
     setSelected(null);
     setFeedback("");
-    setCurrentIndex((prev) => (prev + 1) % VOCABULARY.length);
+    setCurrentIndex((prev) => (prev + 1) % Math.max(1, vocabulary.length));
   };
 
   return (

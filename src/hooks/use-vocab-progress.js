@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { VOCABULARY } from "@/data/vocabulary";
+import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 const STORAGE_KEY = "shivam-blackbook-vocab-progress";
 
@@ -97,7 +97,8 @@ export function useVocabProgress() {
     [progress.pendingIds],
   );
 
-  const totalWords = VOCABULARY.length;
+  const { items: vocabulary } = useVocabularyData();
+  const totalWords = vocabulary.length;
   const learnedCount = learnedIds.size;
   const pendingCount = pendingIds.size;
   const remainingToday = Math.max(
@@ -110,6 +111,8 @@ export function useVocabProgress() {
       : 0;
 
   const getStatus = (item) => {
+    if (!item) return "New";
+    if (item.status) return item.status;
     const id = getId(item);
     if (learnedIds.has(id)) {
       return "Learned";

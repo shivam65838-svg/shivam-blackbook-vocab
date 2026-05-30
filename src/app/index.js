@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.three,
     alignItems: "center",
+     width: "100%",
   },
   heroLogo: {
     width: 60,

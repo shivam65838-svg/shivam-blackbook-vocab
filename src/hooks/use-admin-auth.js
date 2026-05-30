@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "shivam-blackbook-admin-auth";
 const ADMIN_USERNAME = "Shivam";
-const ADMIN_PASSWORD = "ChangeMe123";
+const ADMIN_PASSWORD = "spk919695";
 
 const hasLocalStorage =
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";

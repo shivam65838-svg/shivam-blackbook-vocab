@@ -139,7 +139,12 @@ export default function HomeScreen() {
                 ]}
                 onPress={() => router.push(action.route)}
               >
-                <ThemedText type="smallBold">{action.label}</ThemedText>
+                <ThemedText
+  type="smallBold"
+  style={{ color: "#FFFFFF" }}
+>
+  {action.label}
+</ThemedText>
               </Pressable>
             ))}
           </View>

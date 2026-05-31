@@ -21,14 +21,15 @@ const quickActions = [
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const {
-    totalWords,
-    learnedCount,
-    pendingCount,
-    dailyTarget,
-    completedToday,
-    remainingToday,
-  } = useVocabProgress();
+ const {
+  totalWords,
+  learnedCount,
+  pendingCount,
+  dailyTarget,
+  completedToday,
+  remainingToday,
+  setDailyTarget,
+} = useVocabProgress();
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
@@ -60,33 +61,41 @@ export default function HomeScreen() {
             >
               Track your streak, review flashcards, and strengthen Hindi-English
               recall every day.
-            </ThemedText>
-            <View style={styles.statsRow}>
-              <View
-                style={[styles.statCard, { backgroundColor: theme.surface }]}
-              >
-                <ThemedText type="small" themeColor="textSecondary">
-                  Total words
-                </ThemedText>
-                <ThemedText type="subtitle">{totalWords}</ThemedText>
-              </View>
-              <View
-                style={[styles.statCard, { backgroundColor: theme.surface }]}
-              >
-                <ThemedText type="small" themeColor="textSecondary">
-                  Learned
-                </ThemedText>
-                <ThemedText type="subtitle">{learnedCount}</ThemedText>
-              </View>
-              <View
-                style={[styles.statCard, { backgroundColor: theme.surface }]}
-              >
-                <ThemedText type="small" themeColor="textSecondary">
-                  Pending
-                </ThemedText>
-                <ThemedText type="subtitle">{pendingCount}</ThemedText>
-              </View>
-            </View>
+              </ThemedText>
+
+            
+              <View style={styles.statsRow}>
+  <Pressable
+    onPress={() => router.push("/vocabulary")}
+    style={[styles.statCard, { backgroundColor: theme.surface }]}
+  >
+    <ThemedText type="small" themeColor="textSecondary">
+      Total words
+    </ThemedText>
+    <ThemedText type="subtitle">{totalWords}</ThemedText>
+  </Pressable>
+
+<Pressable
+  onPress={() => router.push("/vocabulary?filter=learned")}
+  style={[styles.statCard, { backgroundColor: theme.surface }]}
+>
+  <ThemedText type="small" themeColor="textSecondary">
+    Learned
+  </ThemedText>
+  <ThemedText type="subtitle">{learnedCount}</ThemedText>
+</Pressable>
+
+  <Pressable
+  onPress={() => router.push("/vocabulary?filter=pending")}
+  style={[styles.statCard, { backgroundColor: theme.surface }]}
+>
+  <ThemedText type="small" themeColor="textSecondary">
+    Pending
+  </ThemedText>
+  <ThemedText type="subtitle">{pendingCount}</ThemedText>
+</Pressable>
+</View>
+            
           </LinearGradient>
 
           <DailyTargetCard
@@ -96,6 +105,7 @@ export default function HomeScreen() {
             dailyTarget={dailyTarget}
             completedToday={completedToday}
             remainingToday={remainingToday}
+             setDailyTarget={setDailyTarget}
           />
 
           <View style={styles.sectionHeader}>

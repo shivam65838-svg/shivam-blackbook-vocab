@@ -6,12 +6,18 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+import { useVocabProgress } from "@/hooks/use-vocab-progress";
 import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 export default function RevisionScreen() {
   const theme = useTheme();
 
   const { items: vocabulary } = useVocabularyData();
+  const { learnedIds } = useVocabProgress();
+
+const revisionWords = vocabulary.filter((item) =>
+  learnedIds.includes(item.id?.toString() || item.word)
+);
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
@@ -71,24 +77,38 @@ export default function RevisionScreen() {
             </View>
           </View>
 
-          {vocabulary.slice(0, 3).map((item) => (
-            <View
-              key={item.id}
-              style={[styles.card, { backgroundColor: theme.surface }]}
-            >
-              <ThemedText type="smallBold">{item.word}</ThemedText>
-              <ThemedText type="default" themeColor="textSecondary">
-                {item.hindiMeaning}
-              </ThemedText>
-              <ThemedText
-                type="small"
-                themeColor="textSecondary"
-                style={styles.label}
-              >
-                Practice again today
-              </ThemedText>
-            </View>
-          ))}
+          {revisionWords.length === 0 ? (
+  <ThemedText type="default" themeColor="textSecondary">
+    No learned words available for revision.
+  </ThemedText>
+) : (
+  revisionWords.map((item) => (
+    <View
+      key={item.id}
+      style={[styles.card, { backgroundColor: theme.surface }]}
+    >
+      <ThemedText type="smallBold">
+        {item.word}
+      </ThemedText>
+
+      <ThemedText
+        type="default"
+        themeColor="textSecondary"
+      >
+        {item.hindiMeaning}
+      </ThemedText>
+
+      <ThemedText
+        type="small"
+        themeColor="textSecondary"
+        style={styles.label}
+      >
+        Practice again today
+      </ThemedText>
+    </View>
+  ))
+)}
+
 
           <Footer />
         </ScrollView>
@@ -152,6 +172,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    marginTop: Spacing.one,
-  },
+  marginTop: Spacing.one,
+},
 });

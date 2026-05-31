@@ -1,12 +1,12 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    FlatList,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,16 +22,32 @@ import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 export default function VocabularyScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { filter } = useLocalSearchParams();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
 
   const { items: vocabulary, categories: CATEGORIES } = useVocabularyData();
-  const { getStatus, markLearned, markPending } = useVocabProgress();
+  const {
+  getStatus,
+  markLearned,
+  markPending,
+  learnedIds,
+  pendingIds,
+} = useVocabProgress();
 
   const filtered = useMemo(() => {
     const q = (query || "").trim().toLowerCase();
 
     return vocabulary.filter((rawItem) => {
+      const itemKey = rawItem.id?.toString() || rawItem.word;
+
+if (filter === "learned" && !learnedIds.includes(itemKey)) {
+  return false;
+}
+
+if (filter === "pending" && !pendingIds.includes(itemKey)) {
+  return false;
+}
       const item = { ...rawItem };
       const itemCategory =
         item.category && typeof item.category === "string"
@@ -67,11 +83,37 @@ export default function VocabularyScreen() {
         antonyms.includes(q)
       );
     });
-  }, [query, category]);
+  }, [query, category, filter, learnedIds, pendingIds]);
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <ThemedText type="subtitle">Vocabulary</ThemedText>
+      <Pressable
+  onPress={() => router.replace("/")}
+  style={({ pressed }) => [
+    {
+      backgroundColor: pressed ? "#cc0000" : "red",
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      alignSelf: "flex-start",
+      marginBottom: 10,
+    },
+  ]}
+>
+  <ThemedText
+    type="smallBold"
+    style={{ color: "#fff" }}
+  >
+    ← Home
+  </ThemedText>
+</Pressable>
+      <ThemedText type="subtitle">
+  {filter === "learned"
+    ? "Learned Words"
+    : filter === "pending"
+    ? "Pending Words"
+    : "Vocabulary"}
+</ThemedText>
       <ThemedText
         type="default"
         themeColor="textSecondary"
@@ -179,6 +221,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  backButton: {
+  alignSelf: "flex-start",
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+  marginBottom: 10,
+},
   header: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,

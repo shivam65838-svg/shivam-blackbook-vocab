@@ -186,5 +186,6 @@ export function useVocabProgress() {
     markLearned,
     markPending,
     setDailyTarget,
+    learnedIds: progress.learnedIds,
   };
 }

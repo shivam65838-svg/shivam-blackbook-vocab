@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ProgressBar } from "@/components/progress-bar";
 import { ThemedText } from "@/components/themed-text";
@@ -13,6 +13,7 @@ export function DailyTargetCard({
   dailyTarget = 30,
   completedToday = 0,
   remainingToday = 0,
+  setDailyTarget,
 }) {
   const theme = useTheme();
   const completion = Math.min(
@@ -27,7 +28,23 @@ export function DailyTargetCard({
           <ThemedText type="small" themeColor="textSecondary">
             Today's target
           </ThemedText>
-          <ThemedText type="subtitle">{dailyTarget} words</ThemedText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+  <Pressable
+    onPress={() => setDailyTarget(Math.max(10, dailyTarget - 10))}
+  >
+    <ThemedText type="subtitle">➖</ThemedText>
+  </Pressable>
+
+  <ThemedText type="subtitle">
+    {dailyTarget} words
+  </ThemedText>
+
+  <Pressable
+    onPress={() => setDailyTarget(Math.min(100, dailyTarget + 10))}
+  >
+    <ThemedText type="subtitle">➕</ThemedText>
+  </Pressable>
+</View>
         </View>
         <View style={styles.metricStack}>
           <View style={styles.metricItem}>

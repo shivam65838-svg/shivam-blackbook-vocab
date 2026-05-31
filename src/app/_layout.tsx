@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, Slot, ThemeProvider, useSegments } from "expo-router";
-import { Platform, useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import AppTabs from "@/components/app-tabs";
@@ -15,7 +15,7 @@ export default function TabLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
-      {isAdminRoute || Platform.OS === "web" ? <Slot /> : <AppTabs />}
+      {isAdminRoute ? <Slot /> : <AppTabs />}
     </ThemeProvider>
   );
 }

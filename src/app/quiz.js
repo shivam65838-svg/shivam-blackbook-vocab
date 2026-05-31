@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import {
-    FlatList,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -13,8 +13,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+import { useVocabProgress } from "@/hooks/use-vocab-progress";
 import { useVocabularyData } from "@/hooks/use-vocabulary-data";
-
 const getOptions = (word, vocabulary) => {
   const wrongAnswers = vocabulary
     .filter((item) => item.word !== word.word)
@@ -28,112 +28,310 @@ export default function QuizScreen() {
   const theme = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState(null);
-  const [feedback, setFeedback] = useState("");
+  const [answers, setAnswers] = useState([]);
+const [showResult, setShowResult] = useState(false);
+const [reviewFilter, setReviewFilter] = useState("all");
+ const [quizLimit, setQuizLimit] = useState(10);
 
   const { items: vocabulary } = useVocabularyData();
+  const { learnedIds } = useVocabProgress();
 
-  const questionData = vocabulary.length > 0 ? vocabulary[currentIndex % vocabulary.length] : null;
-  const options = useMemo(() => {
-    if (!questionData) return [];
-    return getOptions(questionData, vocabulary);
-  }, [currentIndex, questionData, vocabulary]);
+const quizWords = vocabulary.filter((item) =>
+  learnedIds.includes(item.id?.toString() || item.word)
+);
 
-  const handleSelect = (option) => {
-    setSelected(option);
-    setFeedback(
-      option === questionData.hindiMeaning
-        ? "Correct! Keep going."
-        : "Try again — focus on the meaning.",
-    );
-  };
+const shuffledWords = useMemo(() => {
+  return [...quizWords].sort(() => Math.random() - 0.5);
+}, [quizWords]);
+const limitedWords = shuffledWords.slice(
+  0,
+  Math.min(quizLimit, shuffledWords.length)
+);
 
-  const handleNext = () => {
-    setSelected(null);
-    setFeedback("");
-    setCurrentIndex((prev) => (prev + 1) % Math.max(1, vocabulary.length));
-  };
+const questionData =
+  limitedWords.length > 0
+    ? limitedWords[currentIndex]
+    : null;
+
+const options = useMemo(() => {
+  if (!questionData) return [];
+  return getOptions(questionData, quizWords);
+}, [currentIndex, questionData, quizWords]);
+
+const handleSelect = (option) => {
+  setSelected(option);
+};
+
+const handleNext = () => {
+  if (!selected) return;
+
+  setAnswers((prev) => [
+    ...prev,
+    {
+      word: questionData.word,
+      correct: questionData.hindiMeaning,
+      selected,
+      isCorrect: selected === questionData.hindiMeaning,
+    },
+  ]);
+
+  setSelected(null);
+
+  if (currentIndex >= limitedWords.length - 1) {
+    setShowResult(true);
+    return;
+  }
+
+ setCurrentIndex((prev) => prev + 1);
+};
+if (showResult) {
+  const correctAnswers = answers.filter((a) => a.isCorrect).length;
+  const wrongAnswers = answers.length - correctAnswers;
+  const accuracy =
+    answers.length > 0
+      ? Math.round((correctAnswers / answers.length) * 100)
+      : 0;
 
   return (
-    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
+    <ScrollView>
+      <ThemedView style={styles.page}>
+        <ThemedText type="title">
+          Quiz Result
+        </ThemedText>
+
+        <ThemedText type="subtitle">
+          Score: {correctAnswers}/{answers.length}
+        </ThemedText>
+
+        <ThemedText type="subtitle">
+          Correct: {correctAnswers}
+        </ThemedText>
+
+        <ThemedText type="subtitle">
+          Wrong: {wrongAnswers}
+        </ThemedText>
+
+        <ThemedText type="subtitle">
+          Accuracy: {accuracy}%
+        </ThemedText>
+
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 10,
+            marginTop: 20,
+          }}
         >
-          <View style={styles.header}>
-            <ThemedText type="subtitle">Quiz</ThemedText>
-            <ThemedText
-              type="default"
-              themeColor="textSecondary"
-              style={styles.description}
+          <Pressable
+            style={styles.nextButton}
+            onPress={() => setReviewFilter("all")}
+          >
+            <ThemedText>All</ThemedText>
+          </Pressable>
+
+          <Pressable
+            style={styles.nextButton}
+            onPress={() => setReviewFilter("correct")}
+          >
+            <ThemedText>Correct</ThemedText>
+          </Pressable>
+
+          <Pressable
+            style={styles.nextButton}
+            onPress={() => setReviewFilter("wrong")}
+          >
+            <ThemedText>Wrong</ThemedText>
+          </Pressable>
+        </View>
+
+        {answers
+          .filter((item) => {
+            if (reviewFilter === "correct") return item.isCorrect;
+            if (reviewFilter === "wrong") return !item.isCorrect;
+            return true;
+          })
+          .map((item, index) => (
+            <View
+              key={index}
+              style={{
+                marginTop: 10,
+                padding: 12,
+                borderRadius: 10,
+                backgroundColor: item.isCorrect
+                  ? "#D4EDDA"
+                  : "#F8D7DA",
+              }}
             >
-              Test your recall with premium multiple-choice questions and
-              sharpen the meaning instantly.
-            </ThemedText>
-          </View>
+              <ThemedText type="smallBold">
+                {item.word}
+              </ThemedText>
 
-          <View style={[styles.card, { backgroundColor: theme.surface }]}>
-            <ThemedText type="smallBold">
-              What is the Hindi meaning of
-            </ThemedText>
-            <ThemedText type="title" style={styles.question}>
-              {questionData.word}
-            </ThemedText>
-          </View>
+              <ThemedText>
+                Your Answer: {item.selected}
+              </ThemedText>
 
-          <FlatList
-            data={options}
-            keyExtractor={(item) => item}
-            scrollEnabled={false}
-            renderItem={({ item }) => {
-              const isSelected = selected === item;
-              const isCorrect = item === questionData.hindiMeaning;
-              return (
-                <Pressable
-                  onPress={() => handleSelect(item)}
-                  style={({ pressed }) => [
-                    styles.option,
-                    {
-                      backgroundColor: isSelected
-                        ? isCorrect
-                          ? "#1F6B3C"
-                          : "#5C2230"
-                        : theme.surface,
-                    },
-                    pressed && styles.optionPressed,
-                  ]}
-                >
-                  <ThemedText
-                    type="default"
-                    themeColor={isSelected ? "text" : "textSecondary"}
-                  >
-                    {item}
-                  </ThemedText>
-                </Pressable>
-              );
-            }}
-          />
+              <ThemedText>
+                Correct Answer: {item.correct}
+              </ThemedText>
 
-          <View style={styles.footer}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {feedback || "Choose the correct answer to continue your streak."}
-            </ThemedText>
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextButton,
-                pressed && styles.actionPressed,
-              ]}
-              onPress={handleNext}
-            >
-              <ThemedText type="smallBold">Next question</ThemedText>
-            </Pressable>
-          </View>
+              <ThemedText>
+                {item.isCorrect ? "✅ Correct" : "❌ Wrong"}
+              </ThemedText>
+            </View>
+          ))}
 
-          <Footer />
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+        <Pressable
+          style={[styles.nextButton, { marginTop: 20 }]}
+          onPress={() => {
+            setCurrentIndex(0);
+            setSelected(null);
+            setAnswers([]);
+            setShowResult(false);
+            setReviewFilter("all");
+          }}
+        >
+          <ThemedText type="smallBold">
+            Retry Quiz
+          </ThemedText>
+        </Pressable>
+      </ThemedView>
+    </ScrollView>
   );
+}
+
+
+return (
+  <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <ThemedText type="subtitle">Quiz</ThemedText>
+
+          <ThemedText
+            type="default"
+            themeColor="textSecondary"
+            style={styles.description}
+          >
+            Test your recall with premium multiple-choice questions and
+            sharpen the meaning instantly.
+          </ThemedText>
+        </View>
+
+        {/* Quiz Limit Selector */}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 8,
+            marginBottom: 10,
+          }}
+        >
+          {[10, 20, 50].map((limit) => (
+            <Pressable
+              key={limit}
+              style={[
+                styles.nextButton,
+                {
+                  backgroundColor:
+                    quizLimit === limit ? "#1A3CBF" : "#666",
+                },
+              ]}
+              onPress={() => {
+                setQuizLimit(limit);
+                setCurrentIndex(0);
+              }}
+            >
+              <ThemedText>{limit}</ThemedText>
+            </Pressable>
+          ))}
+
+          <Pressable
+            style={[
+              styles.nextButton,
+              {
+                backgroundColor:
+                  quizLimit === shuffledWords.length
+                    ? "#1A3CBF"
+                    : "#666",
+              },
+            ]}
+            onPress={() => {
+              setQuizLimit(shuffledWords.length);
+              setCurrentIndex(0);
+            }}
+          >
+            <ThemedText>All</ThemedText>
+          </Pressable>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: theme.surface }]}>
+          <ThemedText type="smallBold">
+            Question {currentIndex + 1}/{limitedWords.length}
+          </ThemedText>
+
+          <ThemedText type="smallBold">
+            What is the Hindi meaning of
+          </ThemedText>
+
+          <ThemedText type="title" style={styles.question}>
+            {questionData?.word || "No learned words available"}
+          </ThemedText>
+        </View>
+
+        <FlatList
+          data={options}
+          keyExtractor={(item, index) => `${item}-${index}`}
+          scrollEnabled={false}
+          renderItem={({ item }) => {
+            const isSelected = selected === item;
+
+            return (
+              <Pressable
+                onPress={() => handleSelect(item)}
+                style={({ pressed }) => [
+                  styles.option,
+                  {
+                    backgroundColor: isSelected
+                      ? theme.primary
+                      : theme.surface,
+                  },
+                  pressed && styles.optionPressed,
+                ]}
+              >
+                <ThemedText
+                  type="default"
+                  themeColor={isSelected ? "text" : "textSecondary"}
+                >
+                  {item}
+                </ThemedText>
+              </Pressable>
+            );
+          }}
+        />
+<View style={styles.footer}>
+  <Pressable
+    style={({ pressed }) => [
+      styles.nextButton,
+      pressed && styles.optionPressed,
+    ]}
+    onPress={handleNext}
+  >
+    <ThemedText type="smallBold">
+      {currentIndex === limitedWords.length - 1
+        ? "Submit Quiz"
+        : "Next Question"}
+    </ThemedText>
+  </Pressable>
+</View>
+
+        <Footer />
+      </ScrollView>
+    </SafeAreaView>
+  </ThemedView>
+);
 }
 
 const styles = StyleSheet.create({

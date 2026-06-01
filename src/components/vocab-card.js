@@ -53,6 +53,10 @@ export function VocabCard({ item, status = "New", onLearned, onPending }) {
       : status === "Pending"
         ? "#F59E0B"
         : theme.accent;
+        const isLearned = status === "Learned";
+const isPending =
+  status === "Pending" ||
+  status === "Pending Revision";
 
   return (
     <Animated.View
@@ -74,9 +78,9 @@ export function VocabCard({ item, status = "New", onLearned, onPending }) {
             {item.category}
           </ThemedText>
           <View style={[styles.statusPill, { backgroundColor: statusColor }]}>
-            <ThemedText type="smallBold" style={styles.statusText}>
-              {status}
-            </ThemedText>
+           <ThemedText type="smallBold" style={styles.statusText}>
+  STATUS: {status}
+</ThemedText>
           </View>
         </View>
         <ThemedText type="title" style={styles.word}>
@@ -112,21 +116,46 @@ export function VocabCard({ item, status = "New", onLearned, onPending }) {
       </View>
 
       <View style={styles.actionRow}>
+      <Pressable
+  onPress={onLearned}
+  style={[
+    styles.actionButton,
+    {
+      backgroundColor: isLearned
+        ? "#22C55E"
+        : "#E5E7EB",
+    },
+  ]}
+>
+  <ThemedText
+    type="smallBold"
+    style={{
+      color: isLearned ? "#FFFFFF" : "#000000",
+    }}
+  >
+    {isLearned ? "✓ Learned" : "Mark as Learned"}
+  </ThemedText>
+</Pressable>
         <Pressable
-          onPress={onLearned}
-          style={[styles.actionButton, { backgroundColor: theme.accent }]}
-        >
-          <ThemedText type="smallBold">✓ Learned</ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={onPending}
-          style={[
-            styles.actionButton,
-            { backgroundColor: theme.backgroundElement },
-          ]}
-        >
-          <ThemedText type="smallBold">📖 Pending Revision</ThemedText>
-        </Pressable>
+  onPress={onPending}
+  style={[
+    styles.actionButton,
+    {
+      backgroundColor: isPending
+        ? "#F97316"
+        : theme.backgroundElement,
+    },
+  ]}
+>
+  <ThemedText
+    type="smallBold"
+    style={{
+      color: isPending ? "#FFFFFF" : undefined,
+    }}
+  >
+    📖 Pending Revision
+  </ThemedText>
+</Pressable>
       </View>
     </Animated.View>
   );

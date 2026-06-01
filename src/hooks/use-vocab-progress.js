@@ -127,21 +127,21 @@ useEffect(() => {
     progress.dailyTarget > 0
       ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)
       : 0;
+const getStatus = (item) => {
+  if (!item) return "New";
 
-  const getStatus = (item) => {
-    if (!item) return "New";
-    if (item.status) return item.status;
-    const id = getId(item);
-    if (learnedIds.has(id)) {
-      return "Learned";
-    }
+  const id = getId(item);
 
-    if (pendingIds.has(id)) {
-      return "Pending";
-    }
+  if (learnedIds.has(id)) {
+    return "Learned";
+  }
 
-    return "New";
-  };
+  if (pendingIds.has(id)) {
+    return "Pending Revision";
+  }
+
+  return item.status || "New";
+};
 
   const markLearned = (item) => {
     const id = getId(item);

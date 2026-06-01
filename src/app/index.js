@@ -87,7 +87,7 @@ console.log("ORIGIN =", window.location.origin);
             
               <View style={styles.statsRow}>
   <Pressable
-    onPress={() => router.push("/vocabulary")}
+  onPress={() => router.push("/vocabulary")}
     style={[styles.statCard, { backgroundColor: theme.surface }]}
   >
     <ThemedText type="small" themeColor="textSecondary">

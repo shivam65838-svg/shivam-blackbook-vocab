@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 const STORAGE_KEY = "shivam-blackbook-vocab-progress";
 
@@ -97,8 +96,27 @@ export function useVocabProgress() {
     [progress.pendingIds],
   );
 
-  const { items: vocabulary } = useVocabularyData();
-  const totalWords = vocabulary.length;
+  const [totalWords, setTotalWords] = useState(0);
+
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  try {
+    const raw = localStorage.getItem(
+      "shivam-blackbook-vocab-data"
+    );
+
+    if (raw) {
+  const items = JSON.parse(raw);
+
+  console.log("LOCAL STORAGE COUNT =", items.length);
+
+  setTotalWords(items.length);
+}
+  } catch (error) {
+    console.log(error);
+  }
+}, []);
   const learnedCount = learnedIds.size;
   const pendingCount = pendingIds.size;
   const remainingToday = Math.max(
@@ -174,18 +192,40 @@ export function useVocabProgress() {
       dailyTarget: Number(value) || 30,
     }));
   };
+console.log("TOTAL WORDS STATE =", totalWords);
 
-  return {
-    ...progress,
-    totalWords,
-    learnedCount,
-    pendingCount,
-    remainingToday,
-    completionRate,
-    getStatus,
-    markLearned,
-    markPending,
-    setDailyTarget,
-    learnedIds: progress.learnedIds,
-  };
+
+ return {
+  ...progress,
+  totalWords,
+  learnedCount,
+  pendingCount,
+  remainingToday,
+  completionRate,
+  getStatus,
+  markLearned,
+  markPending,
+  setDailyTarget,
+  learnedIds: progress.learnedIds,
+  pendingIds: progress.pendingIds,
+};
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

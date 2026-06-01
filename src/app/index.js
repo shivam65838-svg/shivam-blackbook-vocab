@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,6 +31,26 @@ export default function HomeScreen() {
   remainingToday,
   setDailyTarget,
 } = useVocabProgress();
+const [realTotalWords, setRealTotalWords] = useState(0);
+
+useEffect(() => {
+  const raw = localStorage.getItem("shivam-blackbook-vocab-data");
+
+  if (raw) {
+    const items = JSON.parse(raw);
+    setRealTotalWords(items.length);
+
+    console.log("REAL WORDS =", items.length);
+  }
+}, []);
+const raw = localStorage.getItem("shivam-blackbook-vocab-data");
+
+console.log(
+  "LOCAL STORAGE WORDS =",
+  raw ? JSON.parse(raw).length : 0
+);
+console.log("HOME TOTAL WORDS =", totalWords);
+console.log("ORIGIN =", window.location.origin);
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
@@ -72,7 +93,7 @@ export default function HomeScreen() {
     <ThemedText type="small" themeColor="textSecondary">
       Total words
     </ThemedText>
-    <ThemedText type="subtitle">{totalWords}</ThemedText>
+    <ThemedText type="subtitle"> {realTotalWords}</ThemedText>
   </Pressable>
 
 <Pressable

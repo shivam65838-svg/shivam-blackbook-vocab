@@ -14,8 +14,6 @@ const tabIcons = {
 export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === "unspecified" ? "light" : scheme];
-  
-}
 
   return (
     <NativeTabs
@@ -26,7 +24,10 @@ export default function AppTabs() {
     >
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon src={tabIcons.home} renderingMode="template" />
+        <NativeTabs.Trigger.Icon
+          src={tabIcons.home}
+          renderingMode="template"
+        />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="vocabulary">
@@ -39,7 +40,10 @@ export default function AppTabs() {
 
       <NativeTabs.Trigger name="quiz">
         <NativeTabs.Trigger.Label>Quiz</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon src={tabIcons.quiz} renderingMode="template" />
+        <NativeTabs.Trigger.Icon
+          src={tabIcons.quiz}
+          renderingMode="template"
+        />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="revision">

@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [status, setStatus] = useState("New");
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState("");
+  const [bulkWords, setBulkWords] = useState("");
 
   useEffect(() => {
     if (initialized && !authenticated) {
@@ -84,31 +85,94 @@ export default function AdminDashboard() {
     setHindiMeaning(item.hindiMeaning || "");
     setExample(item.example || "");
     setMnemonic(item.mnemonic || "");
-    setCategory(item.category || SUPPORTED_CATEGORIES[0]);
+    setCategory(item.category || rawCategories?.[0] || "Vocabulary");
     setEditingId(item.id);
     setMessage("");
     router.replace("/admin/dashboard");
   };
 
-  const handleDelete = (itemId) => {
-    const confirmed =
-      typeof window !== "undefined"
-        ? window.confirm("Delete this vocabulary item permanently?")
-        : true;
+const handleBulkImport = () => {
+  if (!bulkWords.trim()) {
+    setMessage("Paste bulk vocabulary first.");
+    return;
+  }
 
-    if (confirmed) {
-      deleteVocabulary(itemId);
-      if (editingId === itemId) {
-        resetForm();
-      }
-      setMessage("Vocabulary item deleted.");
+  const lines = bulkWords
+    .split("\n")
+    .filter((line) => line.trim());
+
+  let imported = 0;
+
+  lines.forEach((line) => {
+    const parts = line.split("|");
+
+    if (parts.length < 5) return;
+
+    const [
+      categoryName,
+      word,
+      hindiMeaning,
+      mnemonic,
+      example,
+    ] = parts.map((p) => p.trim());
+
+    const alreadyExists = items.some(
+      (item) =>
+        item.word?.toLowerCase() === word.toLowerCase()
+    );
+
+    if (alreadyExists) return;
+
+    if (
+      categoryName &&
+      !(rawCategories || []).includes(categoryName)
+    ) {
+      addCategory(categoryName);
     }
-  };
 
-  const categoryChips = useMemo(
-    () => (rawCategories || []).map((option) => ({ label: option })),
-    [rawCategories]
-  );
+    addVocabulary({
+      id: `bulk-${Date.now()}-${Math.random()}`,
+      word,
+      hindiMeaning,
+      mnemonic,
+      example,
+      category: categoryName,
+      difficulty: "Medium",
+      status: "New",
+    });
+
+    imported++;
+  });
+
+  setBulkWords("");
+  setMessage(`${imported} words imported successfully.`);
+};
+
+const handleDelete = (itemId) => {
+  const confirmed =
+    typeof window !== "undefined"
+      ? window.confirm("Delete this vocabulary item permanently?")
+      : true;
+
+  if (confirmed) {
+    deleteVocabulary(itemId);
+
+    if (editingId === itemId) {
+      resetForm();
+    }
+
+    setMessage("Vocabulary item deleted.");
+  }
+
+  
+};
+
+const categoryChips = useMemo(
+  () => (rawCategories || []).map((option) => ({
+    label: option,
+  })),
+  [rawCategories]
+);
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}> 
@@ -272,7 +336,47 @@ export default function AdminDashboard() {
                 {message}
               </ThemedText>
             ) : null}
+<View style={styles.inputGroup}>
+  <ThemedText type="smallBold">
+    Bulk Import Vocabulary
+  </ThemedText>
 
+  <TextInput
+    style={[
+      styles.input,
+      styles.multiline,
+      {
+        backgroundColor: theme.background,
+        color: theme.text,
+        minHeight: 220,
+      },
+    ]}
+    multiline
+    value={bulkWords}
+    onChangeText={setBulkWords}
+    placeholder={`Vocabulary|Abandon|छोड़ देना|A-Band-On|He abandoned the old house.
+
+Vocabulary|Ability|क्षमता|Able hone ki quality|She has ability.
+
+Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
+    placeholderTextColor={theme.textSecondary}
+  />
+
+  <Pressable
+    style={[
+      styles.saveButton,
+      { backgroundColor: theme.accent },
+    ]}
+    onPress={handleBulkImport}
+  >
+    <ThemedText
+      type="smallBold"
+      style={styles.saveText}
+    >
+      Import All Words
+    </ThemedText>
+  </Pressable>
+</View>
             <Pressable
               style={({ pressed }) => [
                 styles.saveButton,

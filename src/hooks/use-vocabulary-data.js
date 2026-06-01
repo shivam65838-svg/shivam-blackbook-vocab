@@ -117,10 +117,11 @@ function buildEntry(raw) {
 export function useVocabularyData() {
   const [items, setItems] = useState(() => {
     const saved = loadSavedVocabulary();
+    console.log("SAVED VOCAB =", saved?.length);
     if (saved) {
       return saved;
     }
-
+console.log("USING DEFAULT VOCAB =", defaultVocabulary.length);
     return defaultVocabulary.map((item) => ({
       ...item,
       category: normalizeCategory(item.category),

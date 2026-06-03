@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     setMessage("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!word.trim() || !hindiMeaning.trim()) {
       setMessage("Word and Hindi meaning are required.");
       return;
@@ -69,15 +69,41 @@ export default function AdminDashboard() {
       difficulty,
       status,
     };
+try {
+  const response = await fetch("/api/vocabulary", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: payload.id,
+      word: payload.word,
+      hindi_meaning: payload.hindiMeaning,
+      mnemonic: payload.mnemonic,
+      example: payload.example,
+      category: payload.category,
+      difficulty: payload.difficulty,
+      status: payload.status,
+    }),
+  });
 
-    if (editingId) {
-      updateVocabulary(payload);
-    } else {
-      addVocabulary(payload);
-    }
+  const data = await response.json();
 
-    resetForm();
-    setMessage(editingId ? "Vocabulary updated successfully." : "Vocabulary added successfully.");
+  console.log("STATUS =", response.status);
+  console.log("DATA =", data);
+
+  if (!response.ok) {
+    throw new Error("API failed");
+  }
+
+  addVocabulary(payload);
+
+  resetForm();
+  setMessage("Vocabulary saved successfully.");
+} catch (error) {
+  console.error("SAVE ERROR =", error);
+  setMessage("Failed to save vocabulary.");
+}
   };
 
   const handleEdit = (item) => {
@@ -86,6 +112,8 @@ export default function AdminDashboard() {
     setExample(item.example || "");
     setMnemonic(item.mnemonic || "");
     setCategory(item.category || rawCategories?.[0] || "Vocabulary");
+    setDifficulty(item.difficulty || "Medium");
+setStatus(item.status || "New");
     setEditingId(item.id);
     setMessage("");
     router.replace("/admin/dashboard");

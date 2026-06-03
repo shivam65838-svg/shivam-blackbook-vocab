@@ -1,4 +1,11 @@
 import { Pool } from "@neondatabase/serverless";
+console.log("DATABASE_URL EXISTS =", !!process.env.DATABASE_URL);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+console.log("DATABASE_URL EXISTS =", !!process.env.DATABASE_URL);
+console.log("API VERSION 2");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

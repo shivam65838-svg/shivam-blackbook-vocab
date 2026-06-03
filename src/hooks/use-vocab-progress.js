@@ -151,7 +151,7 @@ const getStatus = (item) => {
       }
     );
 
-    window.location.reload();
+    
   } catch (error) {
     console.error(error);
   }
@@ -179,7 +179,7 @@ const getStatus = (item) => {
       }
     );
 
-    window.location.reload();
+    
   } catch (error) {
     console.error(error);
   }

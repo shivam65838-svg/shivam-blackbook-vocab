@@ -50,9 +50,6 @@ useEffect(() => {
 
       setWords(data);
       setRealTotalWords(data.length);
-      console.log("RENDER REAL TOTAL =", realTotalWords);
-
-      console.log("DATABASE WORDS =", data.length);
     } catch (error) {
       console.error(error);
     }

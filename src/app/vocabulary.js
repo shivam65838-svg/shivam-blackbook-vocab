@@ -26,7 +26,11 @@ export default function VocabularyScreen() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
 
-  const { items: vocabulary, categories: CATEGORIES } = useVocabularyData();
+  const {
+  items: vocabulary,
+  setItems,
+  categories: CATEGORIES,
+} = useVocabularyData();
   const {
   getStatus,
   markLearned,
@@ -190,8 +194,28 @@ const item = { ...rawItem };
               <VocabCard
                 item={{ ...item, category: item.category ?? "Words" }}
                 status={getStatus(item)}
-                onLearned={() => markLearned(item)}
-                onPending={() => markPending(item)}
+                onLearned={async () => {
+  await markLearned(item);
+
+  setItems((prev) =>
+    prev.map((w) =>
+      w.id === item.id
+        ? { ...w, status: "Learned" }
+        : w
+    )
+  );
+}}
+                onPending={async () => {
+  await markPending(item);
+
+  setItems((prev) =>
+    prev.map((w) =>
+      w.id === item.id
+        ? { ...w, status: "Pending" }
+        : w
+    )
+  );
+}}
               />
             </View>
           )}

@@ -188,6 +188,7 @@ export function useVocabularyData() {
 
   return {
     items,
+    setItems,
     categories,
     rawCategories: categoriesState,
     addCategory,

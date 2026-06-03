@@ -31,24 +31,23 @@ export default function VocabularyScreen() {
   getStatus,
   markLearned,
   markPending,
-  learnedIds,
-  pendingIds,
 } = useVocabProgress();
 
   const filtered = useMemo(() => {
     const q = (query || "").trim().toLowerCase();
 
     return vocabulary.filter((rawItem) => {
-      const itemKey = rawItem.id?.toString() || rawItem.word;
+  
 
-if (filter === "learned" && !learnedIds.includes(itemKey)) {
+if (filter === "learned" && rawItem.status !== "Learned") {
   return false;
 }
 
-if (filter === "pending" && !pendingIds.includes(itemKey)) {
+if (filter === "pending" && rawItem.status === "Learned") {
   return false;
 }
-      const item = { ...rawItem };
+
+const item = { ...rawItem };
       const itemCategory =
         item.category && typeof item.category === "string"
           ? item.category
@@ -83,7 +82,7 @@ if (filter === "pending" && !pendingIds.includes(itemKey)) {
         antonyms.includes(q)
       );
     });
-  }, [query, category, filter, learnedIds, pendingIds]);
+  }, [query, category, filter, vocabulary]);
 
   const renderHeader = () => (
     <View style={styles.header}>

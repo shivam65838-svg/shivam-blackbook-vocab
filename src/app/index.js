@@ -23,9 +23,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
  const {
-  totalWords,
-  learnedCount,
-  pendingCount,
+  
   dailyTarget,
   completedToday,
   remainingToday,
@@ -33,6 +31,13 @@ export default function HomeScreen() {
 } = useVocabProgress();
 const [realTotalWords, setRealTotalWords] = useState(0);
 const [words, setWords] = useState([]);
+const learnedCount = words.filter(
+  (word) => word.status === "Learned"
+).length;
+
+const pendingCount = words.filter(
+  (word) => word.status !== "Learned"
+).length;
 
 useEffect(() => {
   async function loadWords() {
@@ -124,9 +129,9 @@ useEffect(() => {
           </LinearGradient>
 
           <DailyTargetCard
-            totalWords={totalWords}
-            learnedWords={learnedCount}
-            pendingWords={pendingCount}
+  totalWords={realTotalWords}
+  learnedWords={learnedCount}
+  pendingWords={pendingCount}
             dailyTarget={dailyTarget}
             completedToday={completedToday}
             remainingToday={remainingToday}

@@ -128,63 +128,62 @@ useEffect(() => {
       ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)
       : 0;
 const getStatus = (item) => {
-  if (!item) return "New";
-
-  const id = getId(item);
-
-  if (learnedIds.has(id)) {
-    return "Learned";
-  }
-
-  if (pendingIds.has(id)) {
-    return "Pending Revision";
-  }
-
-  return item.status || "New";
+  return item?.status || "New";
 };
 
-  const markLearned = (item) => {
-    const id = getId(item);
-    if (!id) {
-      return;
-    }
+  const markLearned = async (item) => {
+  const id = getId(item);
 
-    setProgress((current) => {
-      if (current.learnedIds.includes(id)) {
-        return current;
+  if (!id) return;
+
+  try {
+    await fetch(
+      "https://vocab-api-seven.vercel.app/api/vocabulary",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          status: "Learned",
+        }),
       }
+    );
 
-      const today = getTodayKey();
-      const nextCompletedToday =
-        current.lastResetDate === today ? current.completedToday + 1 : 1;
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-      return {
-        ...current,
-        learnedIds: [...current.learnedIds, id],
-        pendingIds: current.pendingIds.filter((itemId) => itemId !== id),
-        completedToday: nextCompletedToday,
-        lastResetDate: today,
-      };
-    });
-  };
+    
 
-  const markPending = (item) => {
-    const id = getId(item);
-    if (!id) {
-      return;
-    }
+  const markPending = async (item) => {
+  const id = getId(item);
 
-    setProgress((current) => {
-      if (current.pendingIds.includes(id)) {
-        return current;
+  if (!id) return;
+
+  try {
+    await fetch(
+      "https://vocab-api-seven.vercel.app/api/vocabulary",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          status: "Pending",
+        }),
       }
+    );
 
-      return {
-        ...current,
-        pendingIds: [...current.pendingIds, id],
-      };
-    });
-  };
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const setDailyTarget = (value) => {
     setProgress((current) => ({

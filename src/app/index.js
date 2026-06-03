@@ -32,25 +32,28 @@ export default function HomeScreen() {
   setDailyTarget,
 } = useVocabProgress();
 const [realTotalWords, setRealTotalWords] = useState(0);
+const [words, setWords] = useState([]);
 
 useEffect(() => {
-  const raw = localStorage.getItem("shivam-blackbook-vocab-data");
+  async function loadWords() {
+    try {
+      const response = await fetch(
+        "https://vocab-api-seven.vercel.app/api/vocabulary"
+      );
 
-  if (raw) {
-    const items = JSON.parse(raw);
-    setRealTotalWords(items.length);
+      const data = await response.json();
 
-    console.log("REAL WORDS =", items.length);
+      setWords(data);
+      setRealTotalWords(data.length);
+
+      console.log("DATABASE WORDS =", data.length);
+    } catch (error) {
+      console.error(error);
+    }
   }
-}, []);
-const raw = localStorage.getItem("shivam-blackbook-vocab-data");
 
-console.log(
-  "LOCAL STORAGE WORDS =",
-  raw ? JSON.parse(raw).length : 0
-);
-console.log("HOME TOTAL WORDS =", totalWords);
-console.log("ORIGIN =", window.location.origin);
+  loadWords();
+}, []);
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>

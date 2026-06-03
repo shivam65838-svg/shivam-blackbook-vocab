@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { VOCABULARY as defaultVocabulary } from "@/data/vocabulary";
 
 const STORAGE_KEY = "shivam-blackbook-vocab-data";
 const CATEGORIES_KEY = "shivam-blackbook-categories";
@@ -115,47 +114,45 @@ function buildEntry(raw) {
 }
 
 export function useVocabularyData() {
-  const [items, setItems] = useState(() => {
-    const saved = loadSavedVocabulary();
-    console.log("SAVED VOCAB =", saved?.length);
-    if (saved) {
-      return saved;
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    async function loadWords() {
+      try {
+        const response = await fetch(
+          "https://vocab-api-seven.vercel.app/api/vocabulary"
+        );
+
+        const data = await response.json();
+
+        const formatted = data.map((item) => ({
+          ...item,
+          hindiMeaning: item.hindi_meaning,
+          category: item.category || "Vocabulary",
+          difficulty: item.difficulty || "Medium",
+          status: item.status || "New",
+        }));
+
+        console.log("DATABASE VOCAB =", formatted.length);
+
+        setItems(formatted);
+      } catch (error) {
+        console.error("VOCAB LOAD ERROR =", error);
+      }
     }
-console.log("USING DEFAULT VOCAB =", defaultVocabulary.length);
-    return defaultVocabulary.map((item) => ({
-      ...item,
-      category: normalizeCategory(item.category),
-      difficulty: item.difficulty || "Medium",
-      status: item.status || "New",
-    }));
-  });
+
+    loadWords();
+  }, []);
   const [categoriesState, setCategoriesState] = useState(() => {
     const saved = loadSavedCategories();
     if (saved && saved.length > 0) return saved;
     return DEFAULT_CATEGORIES;
   });
-  const [initialized, setInitialized] = useState(false);
+  const [initialized] = useState(true);
 
-  useEffect(() => {
-    if (initialized) {
-      return;
-    }
+  
 
-    const saved = loadSavedVocabulary();
-    if (saved) {
-      setItems(saved);
-    }
-
-    setInitialized(true);
-  }, [initialized]);
-
-  useEffect(() => {
-    if (!initialized) {
-      return;
-    }
-
-    saveVocabulary(items);
-  }, [items, initialized]);
+  
 
   useEffect(() => {
     saveCategories(categoriesState);

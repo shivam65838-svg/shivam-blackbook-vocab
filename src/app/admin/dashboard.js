@@ -70,7 +70,25 @@ export default function AdminDashboard() {
       status,
     };
 try {
-  const response = await fetch("/api/vocabulary", {
+  const response = await fetch(
+  "https://vocab-api-seven.vercel.app/api/vocabulary",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: payload.id,
+      word: payload.word,
+      hindi_meaning: payload.hindiMeaning,
+      mnemonic: payload.mnemonic,
+      example: payload.example,
+      category: payload.category,
+      difficulty: payload.difficulty,
+      status: payload.status,
+    }),
+  }
+);
     method: "POST",
     headers: {
       "Content-Type": "application/json",

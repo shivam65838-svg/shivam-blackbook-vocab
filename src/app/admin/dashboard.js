@@ -89,21 +89,8 @@ try {
     }),
   }
 );
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      id: payload.id,
-      word: payload.word,
-      hindi_meaning: payload.hindiMeaning,
-      mnemonic: payload.mnemonic,
-      example: payload.example,
-      category: payload.category,
-      difficulty: payload.difficulty,
-      status: payload.status,
-    }),
-  });
+    
+    
 
   const data = await response.json();
 

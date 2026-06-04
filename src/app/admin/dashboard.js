@@ -197,7 +197,7 @@ try {
 } catch (err) {
   console.error("Bulk Import Error:", err);
 }
-  });
+  }
 
   setBulkWords("");
   setMessage(`${imported} words imported successfully.`);

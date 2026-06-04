@@ -124,7 +124,7 @@ setStatus(item.status || "New");
     router.replace("/admin/dashboard");
   };
 
-const handleBulkImport = () => {
+const handleBulkImport = async () => {
   if (!bulkWords.trim()) {
     setMessage("Paste bulk vocabulary first.");
     return;
@@ -136,10 +136,10 @@ const handleBulkImport = () => {
 
   let imported = 0;
 
-  lines.forEach((line) => {
+  for (const line of lines) {
     const parts = line.split("|");
 
-    if (parts.length < 5) return;
+    if (parts.length < 5) continue;
 
     const [
       categoryName,
@@ -149,12 +149,7 @@ const handleBulkImport = () => {
       example,
     ] = parts.map((p) => p.trim());
 
-    const alreadyExists = items.some(
-      (item) =>
-        item.word?.toLowerCase() === word.toLowerCase()
-    );
-
-    if (alreadyExists) return;
+    
 
     if (
       categoryName &&
@@ -163,18 +158,45 @@ const handleBulkImport = () => {
       addCategory(categoryName);
     }
 
-    addVocabulary({
-      id: `bulk-${Date.now()}-${Math.random()}`,
-      word,
-      hindiMeaning,
-      mnemonic,
-      example,
-      category: categoryName,
-      difficulty: "Medium",
-      status: "New",
-    });
+    const newItem = {
+  id: `bulk-${Date.now()}-${Math.random()}`,
+  word,
+  hindiMeaning,
+  mnemonic,
+  example,
+  category: categoryName,
+  difficulty: "Medium",
+  status: "New",
+};
 
+try {
+  const response = await fetch(
+    "https://vocab-api-seven.vercel.app/api/vocabulary",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: newItem.id,
+        word: newItem.word,
+        hindi_meaning: newItem.hindiMeaning,
+        mnemonic: newItem.mnemonic,
+        example: newItem.example,
+        category: newItem.category,
+        difficulty: newItem.difficulty,
+        status: newItem.status,
+      }),
+    }
+  );
+
+  if (response.ok) {
+    addVocabulary(newItem);
     imported++;
+  }
+} catch (err) {
+  console.error("Bulk Import Error:", err);
+}
   });
 
   setBulkWords("");

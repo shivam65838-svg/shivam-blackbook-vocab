@@ -151,7 +151,12 @@ const getStatus = (item) => {
       }
     );
 
-    
+    setProgress((current) => ({
+      ...current,
+      learnedIds: [...new Set([...current.learnedIds, id])],
+      pendingIds: current.pendingIds.filter((x) => x !== id),
+    }));
+
   } catch (error) {
     console.error(error);
   }
@@ -179,7 +184,12 @@ const getStatus = (item) => {
       }
     );
 
-    
+    setProgress((current) => ({
+      ...current,
+      pendingIds: [...new Set([...current.pendingIds, id])],
+      learnedIds: current.learnedIds.filter((x) => x !== id),
+    }));
+
   } catch (error) {
     console.error(error);
   }

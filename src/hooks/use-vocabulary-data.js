@@ -143,6 +143,27 @@ export function useVocabularyData() {
 
     loadWords();
   }, []);
+  const refreshVocabulary = async () => {
+  try {
+    const response = await fetch(
+      "https://vocab-api-seven.vercel.app/api/vocabulary"
+    );
+
+    const data = await response.json();
+
+    const formatted = data.map((item) => ({
+      ...item,
+      hindiMeaning: item.hindi_meaning,
+      category: item.category || "Vocabulary",
+      difficulty: item.difficulty || "Medium",
+      status: item.status || "New",
+    }));
+
+    setItems(formatted);
+  } catch (error) {
+    console.error(error);
+  }
+};
   const [categoriesState, setCategoriesState] = useState(() => {
     const saved = loadSavedCategories();
     if (saved && saved.length > 0) return saved;
@@ -189,6 +210,7 @@ export function useVocabularyData() {
   return {
     items,
     setItems,
+    refreshVocabulary,
     categories,
     rawCategories: categoriesState,
     addCategory,

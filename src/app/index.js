@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -39,24 +39,32 @@ const pendingCount = words.filter(
   (word) => word.status !== "Learned"
 ).length;
 
-useEffect(() => {
-  async function loadWords() {
-    try {
-      const response = await fetch(
-        "https://vocab-api-seven.vercel.app/api/vocabulary"
-      );
+const loadWords = useCallback(async () => {
+  try {
+    const response = await fetch(
+      "https://vocab-api-seven.vercel.app/api/vocabulary"
+    );
 
-      const data = await response.json();
+    const data = await response.json();
 
-      setWords(data);
-      setRealTotalWords(data.length);
-    } catch (error) {
-      console.error(error);
-    }
+    setWords(data);
+    setRealTotalWords(data.length);
+  } catch (error) {
+    console.error(error);
   }
-
-  loadWords();
 }, []);
+
+useEffect(() => {
+  loadWords();
+}, [loadWords]);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    loadWords();
+  }, 2000);
+
+  return () => clearInterval(interval);
+}, [loadWords]);
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>

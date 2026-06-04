@@ -181,23 +181,48 @@ const handleBulkImport = () => {
   setMessage(`${imported} words imported successfully.`);
 };
 
-const handleDelete = (itemId) => {
+const handleDelete = async (itemId) => {
   const confirmed =
     typeof window !== "undefined"
       ? window.confirm("Delete this vocabulary item permanently?")
       : true;
 
-  if (confirmed) {
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch(
+      "https://vocab-api-seven.vercel.app/api/vocabulary",
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: itemId,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("DELETE STATUS =", response.status);
+    console.log("DELETE DATA =", data);
+
+    if (!response.ok) {
+      throw new Error("Delete failed");
+    }
+
     deleteVocabulary(itemId);
 
     if (editingId === itemId) {
       resetForm();
     }
 
-    setMessage("Vocabulary item deleted.");
+    setMessage("Vocabulary item deleted successfully.");
+  } catch (error) {
+    console.error("DELETE ERROR =", error);
+    setMessage("Failed to delete vocabulary.");
   }
-
-  
 };
 
 const categoryChips = useMemo(

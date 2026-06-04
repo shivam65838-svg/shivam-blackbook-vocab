@@ -1,0 +1,534 @@
+warning: in the working copy of 'src/app/vocabulary.js', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/app/vocabulary.js b/src/app/vocabulary.js[m
+[1mindex a497abc..5605cbe 100644[m
+[1m--- a/src/app/vocabulary.js[m
+[1m+++ b/src/app/vocabulary.js[m
+[36m@@ -1,311 +1,230 @@[m
+[31m-import { useLocalSearchParams, useRouter } from "expo-router";[m
+[31m-import { useMemo, useState } from "react";[m
+[31m-import {[m
+[31m-  FlatList,[m
+[31m-  Pressable,[m
+[31m-  ScrollView,[m
+[31m-  StyleSheet,[m
+[31m-  TextInput,[m
+[31m-  View,[m
+[31m-} from "react-native";[m
+[31m-import { SafeAreaView } from "react-native-safe-area-context";[m
+[31m-[m
+[31m-import { Footer } from "@/components/footer";[m
+[31m-import { ThemedText } from "@/components/themed-text";[m
+[31m-import { ThemedView } from "@/components/themed-view";[m
+[31m-import { VocabCard } from "@/components/vocab-card";[m
+[31m-import { BottomTabInset, Spacing } from "@/constants/theme";[m
+[31m-import { useTheme } from "@/hooks/use-theme";[m
+[31m-import { useVocabProgress } from "@/hooks/use-vocab-progress";[m
+[31m-import { useVocabularyData } from "@/hooks/use-vocabulary-data";[m
+[31m-[m
+[31m-export default function VocabularyScreen() {[m
+[31m-  const theme = useTheme();[m
+[31m-  const router = useRouter();[m
+[31m-  const { filter } = useLocalSearchParams();[m
+[31m-  const [query, setQuery] = useState("");[m
+[31m-  const [category, setCategory] = useState("All");[m
+[31m-[m
+[31m-  const {[m
+[31m-  items: vocabulary,[m
+[31m-  setItems,[m
+[31m-  categories: CATEGORIES,[m
+[31m-} = useVocabularyData();[m
+[31m-  const {[m
+[32m+[m[32mimport { useEffect, useMemo, useRef, useState } from "react";[m
+[32m+[m
+[32m+[m
+[32m+[m[32mconst STORAGE_KEY = "shivam-blackbook-vocab-progress";[m
+[32m+[m
+[32m+[m[32mconst isLocalStorageAvailable = () =>[m
+[32m+[m[32m  typeof window !== "undefined" && typeof window.localStorage !== "undefined";[m
+[32m+[m
+[32m+[m[32mconst readStorage = () => {[m
+[32m+[m[32m  if (!isLocalStorageAvailable()) {[m
+[32m+[m[32m    return null;[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  try {[m
+[32m+[m[32m    const raw = window.localStorage.getItem(STORAGE_KEY);[m
+[32m+[m[32m    return raw ? JSON.parse(raw) : null;[m
+[32m+[m[32m  } catch {[m
+[32m+[m[32m    return null;[m
+[32m+[m[32m  }[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mconst writeStorage = (value) => {[m
+[32m+[m[32m  if (!isLocalStorageAvailable()) {[m
+[32m+[m[32m    return;[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  try {[m
+[32m+[m[32m    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));[m
+[32m+[m[32m  } catch {[m
+[32m+[m[32m    // Ignore storage failures.[m
+[32m+[m[32m  }[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mconst getTodayKey = () => new Date().toISOString().slice(0, 10);[m
+[32m+[m
+[32m+[m[32mconst getId = (item) => item?.id?.toString() || item?.word?.toString() || "";[m
+[32m+[m
+[32m+[m[32mconst normalizeProgress = (raw) => {[m
+[32m+[m[32m  const today = getTodayKey();[m
+[32m+[m[32m  const stored = raw && typeof raw === "object" ? raw : {};[m
+[32m+[m
+[32m+[m[32m  const dailyTarget =[m
+[32m+[m[32m    typeof stored.dailyTarget === "number" ? stored.dailyTarget : 30;[m
+[32m+[m[32m  const learnedIds = Array.isArray(stored.learnedIds)[m
+[32m+[m[32m    ? stored.learnedIds.filter((id) => typeof id === "string")[m
+[32m+[m[32m    : [];[m
+[32m+[m[32m  const pendingIds = Array.isArray(stored.pendingIds)[m
+[32m+[m[32m    ? stored.pendingIds.filter((id) => typeof id === "string")[m
+[32m+[m[32m    : [];[m
+[32m+[m[32m  const lastResetDate =[m
+[32m+[m[32m    typeof stored.lastResetDate === "string" ? stored.lastResetDate : today;[m
+[32m+[m[32m  const completedToday =[m
+[32m+[m[32m    lastResetDate === today ? Number(stored.completedToday) || 0 : 0;[m
+[32m+[m
+[32m+[m[32m  return {[m
+[32m+[m[32m    dailyTarget,[m
+[32m+[m[32m    completedToday,[m
+[32m+[m[32m    lastResetDate: today,[m
+[32m+[m[32m    learnedIds: Array.from(new Set(learnedIds)),[m
+[32m+[m[32m    pendingIds: Array.from(new Set(pendingIds)),[m
+[32m+[m[32m  };[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mconst DEFAULT_STATE = {[m
+[32m+[m[32m  dailyTarget: 30,[m
+[32m+[m[32m  completedToday: 0,[m
+[32m+[m[32m  lastResetDate: getTodayKey(),[m
+[32m+[m[32m  learnedIds: [],[m
+[32m+[m[32m  pendingIds: [],[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mexport function useVocabProgress() {[m
+[32m+[m[32m  const [progress, setProgress] = useState(DEFAULT_STATE);[m
+[32m+[m[32m  const hasHydratedRef = useRef(false);[m
+[32m+[m
+[32m+[m[32m  useEffect(() => {[m
+[32m+[m[32m    const stored = readStorage();[m
+[32m+[m[32m    setProgress(normalizeProgress(stored));[m
+[32m+[m[32m    hasHydratedRef.current = true;[m
+[32m+[m[32m  }, []);[m
+[32m+[m
+[32m+[m[32m  useEffect(() => {[m
+[32m+[m[32m    if (!hasHydratedRef.current) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    writeStorage(progress);[m
+[32m+[m[32m  }, [progress]);[m
+[32m+[m
+[32m+[m[32m  const learnedIds = useMemo([m
+[32m+[m[32m    () => new Set(progress.learnedIds),[m
+[32m+[m[32m    [progress.learnedIds],[m
+[32m+[m[32m  );[m
+[32m+[m[32m  const pendingIds = useMemo([m
+[32m+[m[32m    () => new Set(progress.pendingIds),[m
+[32m+[m[32m    [progress.pendingIds],[m
+[32m+[m[32m  );[m
+[32m+[m
+[32m+[m[32m  const [totalWords, setTotalWords] = useState(0);[m
+[32m+[m
+[32m+[m[32museEffect(() => {[m
+[32m+[m[32m  if (typeof window === "undefined") return;[m
+[32m+[m
+[32m+[m[32m  try {[m
+[32m+[m[32m    const raw = localStorage.getItem([m
+[32m+[m[32m      "shivam-blackbook-vocab-data"[m
+[32m+[m[32m    );[m
+[32m+[m
+[32m+[m[32m    if (raw) {[m
+[32m+[m[32m  const items = JSON.parse(raw);[m
+[32m+[m
+[32m+[m[32m  console.log("LOCAL STORAGE COUNT =", items.length);[m
+[32m+[m
+[32m+[m[32m  setTotalWords(items.length);[m
+[32m+[m[32m}[m
+[32m+[m[32m  } catch (error) {[m
+[32m+[m[32m    console.log(error);[m
+[32m+[m[32m  }[m
+[32m+[m[32m}, []);[m
+[32m+[m[32m  const learnedCount = learnedIds.size;[m
+[32m+[m[32m  const pendingCount = pendingIds.size;[m
+[32m+[m[32m  const remainingToday = Math.max([m
+[32m+[m[32m    progress.dailyTarget - progress.completedToday,[m
+[32m+[m[32m    0,[m
+[32m+[m[32m  );[m
+[32m+[m[32m  const completionRate =[m
+[32m+[m[32m    progress.dailyTarget > 0[m
+[32m+[m[32m      ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)[m
+[32m+[m[32m      : 0;[m
+[32m+[m[32mconst getStatus = (item) => {[m
+[32m+[m[32m  return item?.status || "New";[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32m  const markLearned = async (item) => {[m
+[32m+[m[32m  const id = getId(item);[m
+[32m+[m
+[32m+[m[32m  if (!id) return;[m
+[32m+[m
+[32m+[m[32m  try {[m
+[32m+[m[32m    await fetch([m
+[32m+[m[32m      "https://vocab-api-seven.vercel.app/api/vocabulary",[m
+[32m+[m[32m      {[m
+[32m+[m[32m        method: "PUT",[m
+[32m+[m[32m        headers: {[m
+[32m+[m[32m          "Content-Type": "application/json",[m
+[32m+[m[32m        },[m
+[32m+[m[32m        body: JSON.stringify({[m
+[32m+[m[32m          id,[m
+[32m+[m[32m          status: "Learned",[m
+[32m+[m[32m        }),[m
+[32m+[m[32m      }[m
+[32m+[m[32m    );[m
+[32m+[m
+[32m+[m[41m    [m
+[32m+[m[32m  } catch (error) {[m
+[32m+[m[32m    console.error(error);[m
+[32m+[m[32m  }[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[41m    [m
+[32m+[m
+[32m+[m[32m  const markPending = async (item) => {[m
+[32m+[m[32m  const id = getId(item);[m
+[32m+[m
+[32m+[m[32m  if (!id) return;[m
+[32m+[m
+[32m+[m[32m  try {[m
+[32m+[m[32m    await fetch([m
+[32m+[m[32m      "https://vocab-api-seven.vercel.app/api/vocabulary",[m
+[32m+[m[32m      {[m
+[32m+[m[32m        method: "PUT",[m
+[32m+[m[32m        headers: {[m
+[32m+[m[32m          "Content-Type": "application/json",[m
+[32m+[m[32m        },[m
+[32m+[m[32m        body: JSON.stringify({[m
+[32m+[m[32m          id,[m
+[32m+[m[32m          status: "Pending",[m
+[32m+[m[32m        }),[m
+[32m+[m[32m      }[m
+[32m+[m[32m    );[m
+[32m+[m
+[32m+[m[41m    [m
+[32m+[m[32m  } catch (error) {[m
+[32m+[m[32m    console.error(error);[m
+[32m+[m[32m  }[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32m  const setDailyTarget = (value) => {[m
+[32m+[m[32m    setProgress((current) => ({[m
+[32m+[m[32m      ...current,[m
+[32m+[m[32m      dailyTarget: Number(value) || 30,[m
+[32m+[m[32m    }));[m
+[32m+[m[32m  };[m
+[32m+[m[32mconsole.log("TOTAL WORDS STATE =", totalWords);[m
+[32m+[m
+[32m+[m
+[32m+[m[32m return {[m
+[32m+[m[32m  ...progress,[m
+[32m+[m[32m  totalWords,[m
+[32m+[m[32m  learnedCount,[m
+[32m+[m[32m  pendingCount,[m
+[32m+[m[32m  remainingToday,[m
+[32m+[m[32m  completionRate,[m
+   getStatus,[m
+   markLearned,[m
+   markPending,[m
+[31m-} = useVocabProgress();[m
+[32m+[m[32m  setDailyTarget,[m
+[32m+[m[32m  learnedIds: progress.learnedIds,[m
+[32m+[m[32m  pendingIds: progress.pendingIds,[m
+[32m+[m[32m};[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+ [m
+[31m-  const filtered = useMemo(() => {[m
+[31m-    const q = (query || "").trim().toLowerCase();[m
+ [m
+[31m-    return vocabulary.filter((rawItem) => {[m
+[31m-  [m
+ [m
+[31m-if (filter === "learned" && rawItem.status !== "Learned") {[m
+[31m-  return false;[m
+[31m-}[m
+ [m
+[31m-if (filter === "pending" && rawItem.status === "Learned") {[m
+[31m-  return false;[m
+[31m-}[m
+ [m
+[31m-const item = { ...rawItem };[m
+[31m-      const itemCategory =[m
+[31m-        item.category && typeof item.category === "string"[m
+[31m-          ? item.category[m
+[31m-          : "Words";[m
+ [m
+[31m-      if (category !== "All" && itemCategory !== category) {[m
+[31m-        return false;[m
+[31m-      }[m
+ [m
+[31m-      if (!q) {[m
+[31m-        return true;[m
+[31m-      }[m
+ [m
+[31m-      const word = (item.word || "").toString().toLowerCase();[m
+[31m-      const hindi = (item.hindiMeaning || "").toString().toLowerCase();[m
+[31m-      const meaning = (item.meaning || "").toString().toLowerCase();[m
+[31m-      const example = (item.example || "").toString().toLowerCase();[m
+[31m-[m
+[31m-      const synonyms = Array.isArray(item.synonyms)[m
+[31m-        ? item.synonyms.join(" ").toLowerCase()[m
+[31m-        : (item.synonyms || "").toString().toLowerCase();[m
+[31m-      const antonyms = Array.isArray(item.antonyms)[m
+[31m-        ? item.antonyms.join(" ").toLowerCase()[m
+[31m-        : (item.antonyms || "").toString().toLowerCase();[m
+[31m-[m
+[31m-      return ([m
+[31m-        word.includes(q) ||[m
+[31m-        hindi.includes(q) ||[m
+[31m-        meaning.includes(q) ||[m
+[31m-        example.includes(q) ||[m
+[31m-        synonyms.includes(q) ||[m
+[31m-        antonyms.includes(q)[m
+[31m-      );[m
+[31m-    });[m
+[31m-  }, [query, category, filter, vocabulary]);[m
+[31m-[m
+[31m-  const renderHeader = () => ([m
+[31m-    <View style={styles.header}>[m
+[31m-      <Pressable[m
+[31m-  onPress={() => router.replace("/")}[m
+[31m-  style={({ pressed }) => [[m
+[31m-    {[m
+[31m-      backgroundColor: pressed ? "#cc0000" : "red",[m
+[31m-      paddingVertical: 10,[m
+[31m-      paddingHorizontal: 16,[m
+[31m-      borderRadius: 8,[m
+[31m-      alignSelf: "flex-start",[m
+[31m-      marginBottom: 10,[m
+[31m-    },[m
+[31m-  ]}[m
+[31m->[m
+[31m-  <ThemedText[m
+[31m-    type="smallBold"[m
+[31m-    style={{ color: "#fff" }}[m
+[31m-  >[m
+[31m-    ← Home[m
+[31m-  </ThemedText>[m
+[31m-</Pressable>[m
+[31m-      <ThemedText type="subtitle">[m
+[31m-  {filter === "learned"[m
+[31m-    ? "Learned Words"[m
+[31m-    : filter === "pending"[m
+[31m-    ? "Pending Words"[m
+[31m-    : "Vocabulary"}[m
+[31m-</ThemedText>[m
+[31m-      <ThemedText[m
+[31m-        type="default"[m
+[31m-        themeColor="textSecondary"[m
+[31m-        style={styles.description}[m
+[31m-      >[m
+[31m-        Swipe through premium cards, review Hindi meanings, and reinforce memory[m
+[31m-        with mnemonics.[m
+[31m-      </ThemedText>[m
+[31m-[m
+[31m-      <View style={styles.searchRow}>[m
+[31m-        <TextInput[m
+[31m-          style={[[m
+[31m-            styles.searchInput,[m
+[31m-            { backgroundColor: theme.surface, color: theme.text },[m
+[31m-          ]}[m
+[31m-          placeholder="Search words"[m
+[31m-          placeholderTextColor={theme.textSecondary}[m
+[31m-          value={query}[m
+[31m-          onChangeText={setQuery}[m
+[31m-          returnKeyType="search"[m
+[31m-          accessibilityLabel="Search vocabulary"[m
+[31m-        />[m
+[31m-        <Pressable[m
+[31m-          style={[styles.searchButton, { backgroundColor: theme.accent }]}[m
+[31m-          onPress={() => router.push("/search")}[m
+[31m-          accessibilityLabel="Open search screen"[m
+[31m-        >[m
+[31m-          <ThemedText type="smallBold">Open search screen</ThemedText>[m
+[31m-        </Pressable>[m
+[31m-      </View>[m
+[31m-[m
+[31m-      <ScrollView[m
+[31m-        horizontal[m
+[31m-        showsHorizontalScrollIndicator={false}[m
+[31m-        contentContainerStyle={styles.filterBar}[m
+[31m-        accessibilityRole="toolbar"[m
+[31m-      >[m
+[31m-        {CATEGORIES.map((cat) => {[m
+[31m-          const selected = cat === category;[m
+[31m-          return ([m
+[31m-            <Pressable[m
+[31m-              key={cat}[m
+[31m-              onPress={() => setCategory(cat)}[m
+[31m-              style={[[m
+[31m-                styles.filterButton,[m
+[31m-                {[m
+[31m-                  backgroundColor: selected ? theme.accent : "transparent",[m
+[31m-                  borderColor: selected ? theme.accent : theme.textSecondary,[m
+[31m-                },[m
+[31m-              ]}[m
+[31m-              accessibilityState={{ selected }}[m
+[31m-            >[m
+[31m-              <ThemedText[m
+[31m-                type={selected ? "smallBold" : "default"}[m
+[31m-                style={selected ? styles.filterTextSelected : styles.filterText}[m
+[31m-              >[m
+[31m-                {cat}[m
+[31m-              </ThemedText>[m
+[31m-            </Pressable>[m
+[31m-          );[m
+[31m-        })}[m
+[31m-      </ScrollView>[m
+[31m-    </View>[m
+[31m-  );[m
+ [m
+[31m-  return ([m
+[31m-    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>[m
+[31m-      <SafeAreaView style={styles.safeArea}>[m
+[31m-        <FlatList[m
+[31m-          data={filtered}[m
+[31m-          keyExtractor={(item) => (item.id ? item.id.toString() : item.word)}[m
+[31m-          ListHeaderComponent={renderHeader}[m
+[31m-          renderItem={({ item }) => ([m
+[31m-            <View style={styles.listItem}>[m
+[31m-              <VocabCard[m
+[31m-                item={{ ...item, category: item.category ?? "Words" }}[m
+[31m-                status={getStatus(item)}[m
+[31m-                onLearned={async () => {[m
+[31m-  await markLearned(item);[m
+[31m-[m
+[31m-  setItems((prev) =>[m
+[31m-    prev.map((w) =>[m
+[31m-      w.id === item.id[m
+[31m-        ? { ...w, status: "Learned" }[m
+[31m-        : w[m
+[31m-    )[m
+[31m-  );[m
+[31m-}}[m
+[31m-                onPending={async () => {[m
+[31m-  await markPending(item);[m
+[31m-[m
+[31m-  setItems((prev) =>[m
+[31m-    prev.map((w) =>[m
+[31m-      w.id === item.id[m
+[31m-        ? { ...w, status: "Pending" }[m
+[31m-        : w[m
+[31m-    )[m
+[31m-  );[m
+[31m-}}[m
+[31m-              />[m
+[31m-            </View>[m
+[31m-          )}[m
+[31m-          showsVerticalScrollIndicator={false}[m
+[31m-          contentContainerStyle={styles.cardList}[m
+[31m-          ListFooterComponent={() => <Footer />}[m
+[31m-          ListEmptyComponent={() => ([m
+[31m-            <ThemedText[m
+[31m-              type="default"[m
+[31m-              style={styles.emptyText}[m
+[31m-              themeColor="textSecondary"[m
+[31m-            >[m
+[31m-              No words found.[m
+[31m-            </ThemedText>[m
+[31m-          )}[m
+[31m-        />[m
+[31m-      </SafeAreaView>[m
+[31m-    </ThemedView>[m
+[31m-  );[m
+[31m-}[m
+ [m
+[31m-const styles = StyleSheet.create({[m
+[31m-  page: {[m
+[31m-    flex: 1,[m
+[31m-  },[m
+[31m-  safeArea: {[m
+[31m-    flex: 1,[m
+[31m-  },[m
+[31m-  backButton: {[m
+[31m-  alignSelf: "flex-start",[m
+[31m-  paddingVertical: 8,[m
+[31m-  paddingHorizontal: 12,[m
+[31m-  marginBottom: 10,[m
+[31m-},[m
+[31m-  header: {[m
+[31m-    paddingHorizontal: Spacing.four,[m
+[31m-    paddingTop: Spacing.four,[m
+[31m-    paddingBottom: Spacing.three,[m
+[31m-    gap: Spacing.three,[m
+[31m-  },[m
+[31m-  description: {[m
+[31m-    lineHeight: 24,[m
+[31m-  },[m
+[31m-  searchRow: {[m
+[31m-    flexDirection: "row",[m
+[31m-    alignItems: "center",[m
+[31m-    gap: Spacing.two,[m
+[31m-  },[m
+[31m-  searchInput: {[m
+[31m-    flex: 1,[m
+[31m-    borderRadius: Spacing.five,[m
+[31m-    padding: Spacing.three,[m
+[31m-    fontSize: 16,[m
+[31m-  },[m
+[31m-  searchButton: {[m
+[31m-    borderRadius: Spacing.five,[m
+[31m-    paddingVertical: Spacing.two,[m
+[31m-    paddingHorizontal: Spacing.three,[m
+[31m-    alignItems: "center",[m
+[31m-    marginLeft: Spacing.two,[m
+[31m-  },[m
+[31m-  filterBar: {[m
+[31m-    paddingVertical: Spacing.two,[m
+[31m-    paddingHorizontal: Spacing.four,[m
+[31m-    alignItems: "center",[m
+[31m-  },[m
+[31m-  filterButton: {[m
+[31m-    borderRadius: 999,[m
+[31m-    paddingVertical: Spacing.two,[m
+[31m-    paddingHorizontal: Spacing.four,[m
+[31m-    marginRight: Spacing.two,[m
+[31m-    borderWidth: 1,[m
+[31m-  },[m
+[31m-  filterText: {[m
+[31m-    fontSize: 14,[m
+[31m-  },[m
+[31m-  filterTextSelected: {[m
+[31m-    fontSize: 14,[m
+[31m-    color: "#fff",[m
+[31m-  },[m
+[31m-  cardList: {[m
+[31m-    paddingHorizontal: Spacing.four,[m
+[31m-    paddingBottom: BottomTabInset + Spacing.six,[m
+[31m-    paddingTop: Spacing.two,[m
+[31m-  },[m
+[31m-  listItem: {[m
+[31m-    marginBottom: Spacing.three,[m
+[31m-  },[m
+[31m-  emptyText: {[m
+[31m-    padding: Spacing.four,[m
+[31m-    textAlign: "center",[m
+[31m-  },[m
+[31m-});[m

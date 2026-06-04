@@ -191,7 +191,7 @@ const handleDelete = async (itemId) => {
 
   try {
     const response = await fetch(
-      "https://vocab-api-seven.vercel.app/api/vocabulary",
+      "/api/vocabulary",
       {
         method: "DELETE",
         headers: {

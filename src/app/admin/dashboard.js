@@ -191,7 +191,7 @@ const handleDelete = async (itemId) => {
 
   try {
     const response = await fetch(
-      "/api/vocabulary",
+      "https://vocab-api-seven.vercel.app/api/vocabulary",
       {
         method: "DELETE",
         headers: {
@@ -204,6 +204,10 @@ const handleDelete = async (itemId) => {
     );
 
     const data = await response.json();
+
+
+
+    
 
     console.log("DELETE STATUS =", response.status);
     console.log("DELETE DATA =", data);
@@ -224,6 +228,8 @@ const handleDelete = async (itemId) => {
     setMessage("Failed to delete vocabulary.");
   }
 };
+
+    
 
 const categoryChips = useMemo(
   () => (rawCategories || []).map((option) => ({

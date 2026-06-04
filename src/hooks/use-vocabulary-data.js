@@ -146,10 +146,16 @@ export function useVocabularyData() {
   const refreshVocabulary = async () => {
   try {
     const response = await fetch(
-      "https://vocab-api-seven.vercel.app/api/vocabulary"
-    );
+  "https://vocab-api-seven.vercel.app/api/vocabulary"
+);
 
-    const data = await response.json();
+console.log("STATUS =", response.status);
+
+const text = await response.text();
+
+console.log("RAW RESPONSE =", text);
+
+const data = JSON.parse(text);
 
     const formatted = data.map((item) => ({
       ...item,

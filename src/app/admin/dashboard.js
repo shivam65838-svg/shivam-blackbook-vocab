@@ -15,15 +15,16 @@ export default function AdminDashboard() {
   const router = useRouter();
   const { authenticated, initialized, logout } = useAdminAuth();
   const {
-    items,
-    addVocabulary,
-    updateVocabulary,
-    deleteVocabulary,
-    categories,
-    rawCategories,
-    addCategory,
-    removeCategory,
-  } = useVocabularyData();
+  items,
+  addVocabulary,
+  updateVocabulary,
+  deleteVocabulary,
+  categories,
+  rawCategories,
+  addCategory,
+  removeCategory,
+  refreshVocabulary,
+} = useVocabularyData();
   const [word, setWord] = useState("");
   const [hindiMeaning, setHindiMeaning] = useState("");
   const [example, setExample] = useState("");
@@ -103,8 +104,10 @@ try {
 
   addVocabulary(payload);
 
-  resetForm();
-  setMessage("Vocabulary saved successfully.");
+await refreshVocabulary();
+
+resetForm();
+setMessage("Vocabulary saved successfully.");
 } catch (error) {
   console.error("SAVE ERROR =", error);
   setMessage("Failed to save vocabulary.");
@@ -171,6 +174,7 @@ const handleBulkImport = async () => {
 
 try {
   const response = await fetch(
+    
     "https://vocab-api-seven.vercel.app/api/vocabulary",
     {
       method: "POST",
@@ -189,6 +193,11 @@ try {
       }),
     }
   );
+  console.log("IMPORT WORD =", word);
+console.log("STATUS =", response.status);
+
+const data = await response.json();
+console.log("DATA =", data);
 
   if (response.ok) {
     addVocabulary(newItem);
@@ -199,8 +208,10 @@ try {
 }
   }
 
-  setBulkWords("");
-  setMessage(`${imported} words imported successfully.`);
+  await refreshVocabulary();
+
+setBulkWords("");
+setMessage(`${imported} words imported successfully.`);
 };
 
 const handleDelete = async (itemId) => {

@@ -32,12 +32,31 @@ export default function QuizScreen() {
 const [showResult, setShowResult] = useState(false);
 const [reviewFilter, setReviewFilter] = useState("all");
  const [quizLimit, setQuizLimit] = useState(10);
+ const [selectedCategory, setSelectedCategory] = useState("All");
+const [rangeStart, setRangeStart] = useState(0);
+const [rangeEnd, setRangeEnd] = useState(100);
 
   const { items: vocabulary } = useVocabularyData();
   const { learnedIds } = useVocabProgress();
+  const categories = [
+  "All",
+  ...new Set(
+    vocabulary
+      .map((item) => item.category)
+      .filter(Boolean)
+  ),
+];
 
-const quizWords = vocabulary.filter((item) =>
-  learnedIds.includes(item.id?.toString() || item.word)
+const categoryWords =
+  selectedCategory === "All"
+    ? vocabulary
+    : vocabulary.filter(
+        (item) => item.category === selectedCategory
+      );
+
+const quizWords = categoryWords.slice(
+  rangeStart,
+  Math.min(rangeEnd, categoryWords.length)
 );
 
 const shuffledWords = useMemo(() => {
@@ -219,6 +238,77 @@ return (
             sharpen the meaning instantly.
           </ThemedText>
         </View>
+        
+
+{/* Category Selector */}
+<View
+  style={{
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
+  }}
+>
+  {categories.map((cat) => (
+    <Pressable
+      key={cat}
+      style={[
+        styles.nextButton,
+        {
+          backgroundColor:
+            selectedCategory === cat
+              ? "#1A3CBF"
+              : "#666",
+        },
+      ]}
+      onPress={() => {
+        setSelectedCategory(cat);
+        setCurrentIndex(0);
+      }}
+    >
+      <ThemedText>{cat}</ThemedText>
+    </Pressable>
+  ))}
+</View>
+<View
+  style={{
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
+  }}
+>
+  {[
+    { label: "1-100", start: 0, end: 100 },
+    { label: "101-200", start: 100, end: 200 },
+    { label: "201-300", start: 200, end: 300 },
+    { label: "301-400", start: 300, end: 400 },
+    { label: "401-500", start: 400, end: 500 },
+  ].map((range) => (
+    <Pressable
+      key={range.label}
+      style={[
+        styles.nextButton,
+        {
+          backgroundColor:
+            rangeStart === range.start &&
+            rangeEnd === range.end
+              ? "#1A3CBF"
+              : "#666",
+        },
+      ]}
+      onPress={() => {
+        setRangeStart(range.start);
+        setRangeEnd(range.end);
+        setCurrentIndex(0);
+      }}
+    >
+      <ThemedText>{range.label}</ThemedText>
+    </Pressable>
+  ))}
+</View>
+
+{/* Quiz Limit Selector */}
 
         {/* Quiz Limit Selector */}
         <View

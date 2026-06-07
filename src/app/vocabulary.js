@@ -38,6 +38,7 @@ export default function VocabularyScreen() {
 } = useVocabProgress();
 
   const filtered = useMemo(() => {
+    
     const q = (query || "").trim().toLowerCase();
 
     return vocabulary.filter((rawItem) => {
@@ -87,6 +88,15 @@ const item = { ...rawItem };
       );
     });
   }, [query, category, filter, vocabulary]);
+  const getCategoryCount = (categoryName) => {
+  if (categoryName === "All") {
+    return vocabulary.length;
+  }
+
+  return vocabulary.filter(
+    (item) => item.category === categoryName
+  ).length;
+};
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -170,11 +180,11 @@ const item = { ...rawItem };
               accessibilityState={{ selected }}
             >
               <ThemedText
-                type={selected ? "smallBold" : "default"}
-                style={selected ? styles.filterTextSelected : styles.filterText}
-              >
-                {cat}
-              </ThemedText>
+  type={selected ? "smallBold" : "default"}
+  style={selected ? styles.filterTextSelected : styles.filterText}
+>
+  {cat} ({getCategoryCount(cat)})
+</ThemedText>
             </Pressable>
           );
         })}

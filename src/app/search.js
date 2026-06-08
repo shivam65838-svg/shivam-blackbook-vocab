@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/use-theme";
 export default function SearchScreen() {
   const theme = useTheme();
   const [query, setQuery] = React.useState("");
+  console.log("SEARCH =", query);
   const results = VOCABULARY.filter(
     (item) =>
       item.word.toLowerCase().includes(query.toLowerCase()) ||

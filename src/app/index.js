@@ -58,13 +58,7 @@ useEffect(() => {
   loadWords();
 }, [loadWords]);
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    loadWords();
-  }, 2000);
 
-  return () => clearInterval(interval);
-}, [loadWords]);
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>

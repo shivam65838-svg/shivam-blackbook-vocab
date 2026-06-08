@@ -198,7 +198,7 @@ const item = { ...rawItem };
         <FlatList
           data={filtered}
           keyExtractor={(item) => (item.id ? item.id.toString() : item.word)}
-          ListHeaderComponent={renderHeader}
+          ListHeaderComponent={renderHeader()}
           renderItem={({ item }) => (
             <View style={styles.listItem}>
               <VocabCard

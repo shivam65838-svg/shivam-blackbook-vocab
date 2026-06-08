@@ -199,36 +199,46 @@ const item = { ...rawItem };
           data={filtered}
           keyExtractor={(item) => (item.id ? item.id.toString() : item.word)}
           ListHeaderComponent={renderHeader()}
-          renderItem={({ item }) => (
-            <View style={styles.listItem}>
-              <VocabCard
-                item={{ ...item, category: item.category ?? "Words" }}
-                status={getStatus(item)}
-                onLearned={async () => {
-  await markLearned(item);
+          renderItem={({ item, index }) => (
+  <View style={styles.listItem}>
+    <ThemedText
+      type="smallBold"
+      style={{
+        marginBottom: 8,
+        fontSize: 16,
+      }}
+    >
+      {index + 1}.
+    </ThemedText>
 
-  setItems((prev) =>
-    prev.map((w) =>
-      w.id === item.id
-        ? { ...w, status: "Learned" }
-        : w
-    )
-  );
-}}
-                onPending={async () => {
-  await markPending(item);
+    <VocabCard
+      item={{ ...item, category: item.category ?? "Words" }}
+      status={getStatus(item)}
+      onLearned={async () => {
+        await markLearned(item);
 
-  setItems((prev) =>
-    prev.map((w) =>
-      w.id === item.id
-        ? { ...w, status: "Pending" }
-        : w
-    )
-  );
-}}
-              />
-            </View>
-          )}
+        setItems((prev) =>
+          prev.map((w) =>
+            w.id === item.id
+              ? { ...w, status: "Learned" }
+              : w
+          )
+        );
+      }}
+      onPending={async () => {
+        await markPending(item);
+
+        setItems((prev) =>
+          prev.map((w) =>
+            w.id === item.id
+              ? { ...w, status: "Pending" }
+              : w
+          )
+        );
+      }}
+    />
+  </View>
+)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.cardList}
           ListFooterComponent={() => <Footer />}

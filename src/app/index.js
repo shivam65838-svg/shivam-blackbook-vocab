@@ -22,22 +22,22 @@ const quickActions = [
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
- const {
-  
+const {
   dailyTarget,
   completedToday,
   remainingToday,
   setDailyTarget,
+  learnedIds,
+  pendingIds,
 } = useVocabProgress();
 const [realTotalWords, setRealTotalWords] = useState(0);
 const [words, setWords] = useState([]);
-const learnedCount = words.filter(
-  (word) => word.status === "Learned"
-).length;
+const learnedCount = learnedIds.length;
 
-const pendingCount = words.filter(
-  (word) => word.status !== "Learned"
-).length;
+const pendingCount = Math.max(
+  realTotalWords - learnedCount,
+  0
+);
 
 const loadWords = useCallback(async () => {
   try {

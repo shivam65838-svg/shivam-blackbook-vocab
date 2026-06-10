@@ -127,73 +127,42 @@ useEffect(() => {
     progress.dailyTarget > 0
       ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)
       : 0;
+      
 const getStatus = (item) => {
-  return item?.status || "New";
+  const id = getId(item);
+
+  if (learnedIds.has(id)) return "Learned";
+
+  if (pendingIds.has(id)) return "Pending";
+
+  return "New";
 };
 
-  const markLearned = async (item) => {
+const markLearned = (item) => {
   const id = getId(item);
 
   if (!id) return;
 
-  try {
-    await fetch(
-      "https://vocab-api-seven.vercel.app/api/vocabulary",
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id,
-          status: "Learned",
-        }),
-      }
-    );
+  setProgress((current) => ({
+    ...current,
+    learnedIds: [...new Set([...current.learnedIds, id])],
+    pendingIds: current.pendingIds.filter((x) => x !== id),
+  }));
+};
 
-    setProgress((current) => ({
-      ...current,
-      learnedIds: [...new Set([...current.learnedIds, id])],
-      pendingIds: current.pendingIds.filter((x) => x !== id),
-    }));
+const markPending = (item) => {
+  const id = getId(item);
 
-  } catch (error) {
-    console.error(error);
-  }
+  if (!id) return;
+
+  setProgress((current) => ({
+    ...current,
+    pendingIds: [...new Set([...current.pendingIds, id])],
+    learnedIds: current.learnedIds.filter((x) => x !== id),
+  }));
 };
 
     
-
-  const markPending = async (item) => {
-  const id = getId(item);
-
-  if (!id) return;
-
-  try {
-    await fetch(
-      "https://vocab-api-seven.vercel.app/api/vocabulary",
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id,
-          status: "Pending",
-        }),
-      }
-    );
-
-    setProgress((current) => ({
-      ...current,
-      pendingIds: [...new Set([...current.pendingIds, id])],
-      learnedIds: current.learnedIds.filter((x) => x !== id),
-    }));
-
-  } catch (error) {
-    console.error(error);
-  }
-};
 
   const setDailyTarget = (value) => {
     setProgress((current) => ({

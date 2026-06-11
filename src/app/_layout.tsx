@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { DarkTheme, DefaultTheme, Slot, ThemeProvider, useSegments } from "expo-router";
 import { useColorScheme } from "react-native";
 
@@ -13,9 +14,10 @@ export default function TabLayout() {
   const isAdminRoute = segments?.[0] === "admin";
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      {isAdminRoute ? <Slot /> : <AppTabs />}
-    </ThemeProvider>
-  );
+  <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <AnimatedSplashOverlay />
+    {isAdminRoute ? <Slot /> : <AppTabs />}
+    <Analytics />
+  </ThemeProvider>
+);
 }

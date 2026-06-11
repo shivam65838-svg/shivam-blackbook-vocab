@@ -33,11 +33,7 @@ const {
 const [realTotalWords, setRealTotalWords] = useState(0);
 const [words, setWords] = useState([]);
 const learnedCount = learnedIds.length;
-
-const pendingCount = Math.max(
-  realTotalWords - learnedCount,
-  0
-);
+const pendingCount = pendingIds.length;
 
 const loadWords = useCallback(async () => {
   try {

@@ -44,11 +44,17 @@ export default function VocabularyScreen() {
     return vocabulary.filter((rawItem) => {
   
 
-if (filter === "learned" && rawItem.status !== "Learned") {
+if (
+  filter === "learned" &&
+  getStatus(rawItem) !== "Learned"
+) {
   return false;
 }
 
-if (filter === "pending" && rawItem.status === "Learned") {
+if (
+  filter === "pending" &&
+  getStatus(rawItem) !== "Pending"
+) {
   return false;
 }
 

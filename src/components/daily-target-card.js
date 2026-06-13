@@ -95,30 +95,40 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     padding: Spacing.four,
     gap: Spacing.three,
+    width: "100%",
   },
+
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: Spacing.four,
+    flexWrap: "wrap",
   },
+
   metricStack: {
     alignItems: "flex-end",
     gap: Spacing.two,
+    minWidth: 80,
   },
+
   metricItem: {
     alignItems: "flex-end",
   },
+
   bottomRow: {
     marginTop: Spacing.three,
   },
+
   metricRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
     gap: Spacing.two,
   },
+
   metricCard: {
     flex: 1,
+    minWidth: 100,
     borderRadius: Spacing.five,
     padding: Spacing.three,
     backgroundColor: "rgba(255,255,255,0.04)",

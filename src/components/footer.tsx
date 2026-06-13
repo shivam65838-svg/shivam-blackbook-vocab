@@ -18,7 +18,7 @@ export function Footer() {
       />
       <View style={styles.content}>
         <View style={styles.brandSection}>
-          <ThemedText type="smallBold">Shivam Blackbook Vocabulary App</ThemedText>
+          <ThemedText type="smallBold">SK Blackbook Vocabulary App</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             Founder: Shivam Yadav
           </ThemedText>
@@ -50,7 +50,7 @@ export function Footer() {
       </View>
 
       <ThemedText type="small" themeColor="textSecondary" style={styles.copyright}>
-        © {year} Shivam Blackbook Vocabulary App
+        © {year} SK Blackbook Vocabulary App
       </ThemedText>
     </ThemedView>
   );
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
   },
   sectionItem: {
-    minWidth: 140,
+    width: "100%",
     flex: 1,
     gap: Spacing.one,
   },

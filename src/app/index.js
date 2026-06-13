@@ -73,7 +73,7 @@ useEffect(() => {
             />
             <View style={styles.heroHeader}>
               <ThemedText type="small" themeColor="textSecondary">
-                Shivam Blackbook
+                SK Vocabulary
               </ThemedText>
               <ThemedText type="title" style={styles.heroTitle}>
                 Build premium vocabulary habits

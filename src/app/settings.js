@@ -58,7 +58,7 @@ export default function SettingsScreen() {
               themeColor="textSecondary"
               style={styles.cardText}
             >
-              Shivam Blackbook 1.0.0
+              SK Vocabulary 1.0.0
             </ThemedText>
           </View>
 

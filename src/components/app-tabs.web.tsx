@@ -97,7 +97,7 @@ export function CustomTabList({
           type="smallBold"
           style={styles.brandText}
         >
-          Shivam Blackbook
+          SK Vocabulary
         </ThemedText>
 
         {menuOpen && (

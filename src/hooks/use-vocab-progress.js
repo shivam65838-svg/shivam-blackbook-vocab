@@ -143,11 +143,19 @@ const markLearned = (item) => {
 
   if (!id) return;
 
-  setProgress((current) => ({
-    ...current,
-    learnedIds: [...new Set([...current.learnedIds, id])],
-    pendingIds: current.pendingIds.filter((x) => x !== id),
-  }));
+  setProgress((current) => {
+    const alreadyLearned = current.learnedIds.includes(id);
+
+    return {
+      ...current,
+      learnedIds: [...new Set([...current.learnedIds, id])],
+      pendingIds: current.pendingIds.filter((x) => x !== id),
+
+      completedToday: alreadyLearned
+        ? current.completedToday
+        : current.completedToday + 1,
+    };
+  });
 };
 
 const markPending = (item) => {
@@ -155,11 +163,19 @@ const markPending = (item) => {
 
   if (!id) return;
 
-  setProgress((current) => ({
-    ...current,
-    pendingIds: [...new Set([...current.pendingIds, id])],
-    learnedIds: current.learnedIds.filter((x) => x !== id),
-  }));
+  setProgress((current) => {
+    const wasLearned = current.learnedIds.includes(id);
+
+    return {
+      ...current,
+      pendingIds: [...new Set([...current.pendingIds, id])],
+      learnedIds: current.learnedIds.filter((x) => x !== id),
+
+      completedToday: wasLearned
+        ? Math.max(current.completedToday - 1, 0)
+        : current.completedToday,
+    };
+  });
 };
 
     

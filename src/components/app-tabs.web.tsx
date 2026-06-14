@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 70,
     left: 70,
-    minWidth: 220,
+    width: "100%",
     borderRadius: 12,
     padding: 12,
     gap: 8,

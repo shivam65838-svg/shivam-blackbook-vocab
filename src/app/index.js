@@ -1,5 +1,6 @@
+
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,18 +23,21 @@ const quickActions = [
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-const {
+  const {
   dailyTarget,
   completedToday,
   remainingToday,
   setDailyTarget,
-  learnedIds,
-  pendingIds,
+  learnedCount,
+  pendingCount,
 } = useVocabProgress();
+console.log("RENDER");
+console.log("learnedCount =", learnedCount);
+console.log("pendingCount =", pendingCount);
+
 const [realTotalWords, setRealTotalWords] = useState(0);
 const [words, setWords] = useState([]);
-const learnedCount = learnedIds.length;
-const pendingCount = pendingIds.length;
+
 
 const loadWords = useCallback(async () => {
   try {
@@ -53,6 +57,16 @@ const loadWords = useCallback(async () => {
 useEffect(() => {
   loadWords();
 }, [loadWords]);
+
+useFocusEffect(
+  useCallback(() => {
+    console.log("HOME SCREEN FOCUSED");
+    console.log("LEARNED =", learnedCount);
+    console.log("PENDING =", pendingCount);
+  }, [learnedCount, pendingCount])
+);
+
+
 
 
 

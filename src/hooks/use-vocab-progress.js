@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 
 const STORAGE_KEY = "shivam-blackbook-vocab-progress";
@@ -25,7 +25,10 @@ const writeStorage = (value) => {
   }
 
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(value)
+    );
   } catch {
     // Ignore storage failures.
   }
@@ -33,7 +36,8 @@ const writeStorage = (value) => {
 
 const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
-const getId = (item) => item?.id?.toString() || item?.word?.toString() || "";
+const getId = (item) =>
+  item?.word?.toString().trim().toLowerCase() || "";
 
 const normalizeProgress = (raw) => {
   const today = getTodayKey();
@@ -71,21 +75,38 @@ const DEFAULT_STATE = {
 
 export function useVocabProgress() {
   const [progress, setProgress] = useState(DEFAULT_STATE);
-  const hasHydratedRef = useRef(false);
+  
 
   useEffect(() => {
+  const stored = readStorage();
+  setProgress(normalizeProgress(stored));
+  
+}, []);
+
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  const syncProgress = () => {
     const stored = readStorage();
-    setProgress(normalizeProgress(stored));
-    hasHydratedRef.current = true;
-  }, []);
 
-  useEffect(() => {
-    if (!hasHydratedRef.current) {
-      return;
+    if (stored) {
+      setProgress(normalizeProgress(stored));
     }
+  };
 
-    writeStorage(progress);
-  }, [progress]);
+  window.addEventListener(
+    "vocab-progress-updated",
+    syncProgress
+  );
+
+  return () => {
+    window.removeEventListener(
+      "vocab-progress-updated",
+      syncProgress
+    );
+  };
+}, []);
+
 
   const learnedIds = useMemo(
     () => new Set(progress.learnedIds),
@@ -109,7 +130,7 @@ useEffect(() => {
     if (raw) {
   const items = JSON.parse(raw);
 
-  console.log("LOCAL STORAGE COUNT =", items.length);
+  
 
   setTotalWords(items.length);
 }
@@ -119,6 +140,7 @@ useEffect(() => {
 }, []);
   const learnedCount = learnedIds.size;
   const pendingCount = pendingIds.size;
+  
   const remainingToday = Math.max(
     progress.dailyTarget - progress.completedToday,
     0,
@@ -127,9 +149,13 @@ useEffect(() => {
     progress.dailyTarget > 0
       ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)
       : 0;
+
+      
       
 const getStatus = (item) => {
   const id = getId(item);
+
+  
 
   if (learnedIds.has(id)) return "Learned";
 
@@ -144,49 +170,81 @@ const markLearned = (item) => {
   if (!id) return;
 
   setProgress((current) => {
-    const alreadyLearned = current.learnedIds.includes(id);
+    const alreadyLearned =
+      current.learnedIds.includes(id);
 
-    return {
+    const updated = {
       ...current,
-      learnedIds: [...new Set([...current.learnedIds, id])],
-      pendingIds: current.pendingIds.filter((x) => x !== id),
-
+      learnedIds: [
+        ...new Set([...current.learnedIds, id]),
+      ],
+      pendingIds: current.pendingIds.filter(
+        (x) => x !== id
+      ),
       completedToday: alreadyLearned
         ? current.completedToday
         : current.completedToday + 1,
     };
+
+    writeStorage(updated);
+
+    window.dispatchEvent(
+      new CustomEvent("vocab-progress-updated")
+    );
+
+    return updated;
   });
 };
-
 const markPending = (item) => {
   const id = getId(item);
 
   if (!id) return;
 
   setProgress((current) => {
-    const wasLearned = current.learnedIds.includes(id);
+    const wasLearned =
+      current.learnedIds.includes(id);
 
-    return {
+    const updated = {
       ...current,
-      pendingIds: [...new Set([...current.pendingIds, id])],
-      learnedIds: current.learnedIds.filter((x) => x !== id),
-
+      pendingIds: [
+        ...new Set([...current.pendingIds, id]),
+      ],
+      learnedIds: current.learnedIds.filter(
+        (x) => x !== id
+      ),
       completedToday: wasLearned
         ? Math.max(current.completedToday - 1, 0)
         : current.completedToday,
     };
+
+    writeStorage(updated);
+
+    window.dispatchEvent(
+      new CustomEvent("vocab-progress-updated")
+    );
+
+    return updated;
   });
 };
-
     
 
   const setDailyTarget = (value) => {
-    setProgress((current) => ({
+  setProgress((current) => {
+    const updated = {
       ...current,
       dailyTarget: Number(value) || 30,
-    }));
-  };
-console.log("TOTAL WORDS STATE =", totalWords);
+    };
+
+    writeStorage(updated);
+
+    window.dispatchEvent(
+      new CustomEvent("vocab-progress-updated")
+    );
+
+    return updated;
+  });
+};
+
 
 
  return {
@@ -200,8 +258,7 @@ console.log("TOTAL WORDS STATE =", totalWords);
   markLearned,
   markPending,
   setDailyTarget,
-  learnedIds: progress.learnedIds,
-  pendingIds: progress.pendingIds,
+  
 };
 }
 

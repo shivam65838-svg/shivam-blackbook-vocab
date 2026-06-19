@@ -13,108 +13,201 @@ export default function RevisionScreen() {
   const theme = useTheme();
 
   const { items: vocabulary } = useVocabularyData();
-  const { getStatus } = useVocabProgress();
+  const {
+  getStatus,
+  learnedCount,
+  pendingCount,
+} = useVocabProgress();
 
 const revisionWords = vocabulary.filter(
   (item) => getStatus(item) === "Learned"
 );
+return (
 
-  return (
-    <ThemedView style={[styles.page, { backgroundColor: theme.background }]}>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.header}>
-            <ThemedText type="subtitle">Weekly revision</ThemedText>
-            <ThemedText
-              type="default"
-              themeColor="textSecondary"
-              style={styles.description}
-            >
-              Review your strongest and weakest words with a modern revision
-              planner.
-            </ThemedText>
-          </View>
+  <ThemedView
+    style={[styles.page, { backgroundColor: theme.background }]}
+  >
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
 
-          <View
-            style={[styles.summaryCard, { backgroundColor: theme.surface }]}
+        <View style={styles.header}>
+          <ThemedText type="subtitle">
+            Revision Dashboard
+          </ThemedText>
+
+          <ThemedText
+            type="default"
+            themeColor="textSecondary"
+            style={styles.description}
           >
-            <ThemedText type="smallBold">This week</ThemedText>
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryMetric}>
-                <ThemedText type="subtitle">18</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  words reviewed
-                </ThemedText>
-              </View>
-              <View style={styles.summaryMetric}>
-                <ThemedText type="subtitle">2x</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  review pace
-                </ThemedText>
-              </View>
+            Review all learned vocabulary words.
+          </ThemedText>
+        </View>
+
+        <View
+          style={[
+            styles.summaryCard,
+            { backgroundColor: theme.surface },
+          ]}
+        >
+          <ThemedText type="smallBold">
+            Statistics
+          </ThemedText>
+
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryMetric}>
+              <ThemedText type="subtitle">
+                {learnedCount}
+              </ThemedText>
+
+              <ThemedText
+                type="small"
+                themeColor="textSecondary"
+              >
+                Learned
+              </ThemedText>
+            </View>
+
+            <View style={styles.summaryMetric}>
+              <ThemedText type="subtitle">
+                {pendingCount}
+              </ThemedText>
+
+              <ThemedText
+                type="small"
+                themeColor="textSecondary"
+              >
+                Pending
+              </ThemedText>
+            </View>
+
+            <View style={styles.summaryMetric}>
+              <ThemedText type="subtitle">
+                {revisionWords.length}
+              </ThemedText>
+
+              <ThemedText
+                type="small"
+                themeColor="textSecondary"
+              >
+                Revision
+              </ThemedText>
             </View>
           </View>
+        </View>
 
-          <View style={styles.analyticsCard}>
-            <ThemedText type="smallBold">Weekly analytics</ThemedText>
+        <View
+          style={[
+            styles.analyticsCard,
+            { backgroundColor: theme.surface },
+          ]}
+        >
+          <ThemedText type="smallBold">
+            Learning Progress
+          </ThemedText>
+
+          <View style={styles.progressRow}>
             <View
-              style={[styles.progressRow, { backgroundColor: theme.surface }]}
-            >
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                (day, index) => (
-                  <View
-                    key={day}
-                    style={[
-                      styles.bar,
-                      { height: 60 - index * 5, backgroundColor: theme.accent },
-                    ]}
-                  />
-                ),
-              )}
-            </View>
+              style={[
+                styles.bar,
+                {
+                  height: Math.max(
+                    20,
+                    Math.min(
+                      120,
+                      learnedCount * 4
+                    )
+                  ),
+                  backgroundColor: "#22C55E",
+                },
+              ]}
+            />
+
+            <View
+              style={[
+                styles.bar,
+                {
+                  height: Math.max(
+                    20,
+                    Math.min(
+                      120,
+                      pendingCount * 4
+                    )
+                  ),
+                  backgroundColor: "#F97316",
+                },
+              ]}
+            />
           </View>
+        </View>
 
-          {revisionWords.length === 0 ? (
-  <ThemedText type="default" themeColor="textSecondary">
-    No learned words available for revision.
-  </ThemedText>
-) : (
-  revisionWords.map((item) => (
-    <View
-      key={item.id}
-      style={[styles.card, { backgroundColor: theme.surface }]}
-    >
-      <ThemedText type="smallBold">
-        {item.word}
-      </ThemedText>
+        {revisionWords.length === 0 ? (
+          <ThemedText
+            type="default"
+            themeColor="textSecondary"
+          >
+            No learned words available.
+          </ThemedText>
+        ) : (
+          revisionWords.map((item) => (
+            <View
+              key={item.id || item.word}
+              style={[
+                styles.card,
+                {
+                  backgroundColor:
+                    theme.surface,
+                },
+              ]}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent:
+                    "space-between",
+                }}
+              >
+                <ThemedText type="smallBold">
+                  {item.word}
+                </ThemedText>
 
-      <ThemedText
-        type="default"
-        themeColor="textSecondary"
-      >
-        {item.hindiMeaning}
-      </ThemedText>
+                <ThemedText
+                  type="small"
+                  style={{
+                    color: "#22C55E",
+                  }}
+                >
+                  Learned
+                </ThemedText>
+              </View>
 
-      <ThemedText
-        type="small"
-        themeColor="textSecondary"
-        style={styles.label}
-      >
-        Practice again today
-      </ThemedText>
-    </View>
-  ))
-)}
+              <ThemedText
+                type="default"
+                themeColor="textSecondary"
+              >
+                {item.hindiMeaning}
+              </ThemedText>
 
+              {item.mnemonic ? (
+                <ThemedText
+                  type="small"
+                  themeColor="textSecondary"
+                >
+                  💡 {item.mnemonic}
+                </ThemedText>
+              ) : null}
+            </View>
+          ))
+        )}
 
-          <Footer />
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
-  );
+        <Footer />
+      </ScrollView>
+    </SafeAreaView>
+  </ThemedView>
+);
 }
 
 const styles = StyleSheet.create({

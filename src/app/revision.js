@@ -13,10 +13,10 @@ export default function RevisionScreen() {
   const theme = useTheme();
 
   const { items: vocabulary } = useVocabularyData();
-  const { learnedIds } = useVocabProgress();
+  const { getStatus } = useVocabProgress();
 
-const revisionWords = vocabulary.filter((item) =>
-  learnedIds.includes(item.id?.toString() || item.word)
+const revisionWords = vocabulary.filter(
+  (item) => getStatus(item) === "Learned"
 );
 
   return (

@@ -36,6 +36,7 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [bulkWords, setBulkWords] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
+  const [filterCategory, setFilterCategory] = useState("All");
   useEffect(() => {
     if (initialized && !authenticated) {
       router.replace("/admin");
@@ -270,13 +271,72 @@ const toggleSelection = (id) => {
 
 const selectAllWords = () => {
   setSelectedIds(
-    items.map((item) => item.id)
+    filteredItems.map(
+      (item) => item.id
+    )
   );
 };
+
+
+
 
 const clearSelection = () => {
   setSelectedIds([]);
 };
+
+
+  const deleteEntireCategory = async (
+  categoryName
+) => {
+  const categoryWords = items.filter(
+    (item) => item.category === categoryName
+  );
+
+  if (categoryWords.length === 0) {
+    setMessage(
+      `No words found in ${categoryName}`
+    );
+    return;
+  }
+
+  const confirmed =
+    typeof window !== "undefined"
+      ? window.confirm(
+          `Delete entire "${categoryName}" category (${categoryWords.length} words)?`
+        )
+      : true;
+
+  if (!confirmed) return;
+
+  try {
+    for (const word of categoryWords) {
+      await fetch(
+        "https://vocab-api-seven.vercel.app/api/vocabulary",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: word.id,
+          }),
+        }
+      );
+
+      deleteVocabulary(word.id);
+    }
+
+    await refreshVocabulary();
+
+    setMessage(
+      `${categoryWords.length} words deleted from ${categoryName}`
+    );
+  } catch (error) {
+    console.error(error);
+    setMessage("Category delete failed.");
+  }
+};
+
 const deleteSelectedWords = async () => {
   if (selectedIds.length === 0) {
     setMessage("No words selected.");
@@ -326,7 +386,13 @@ const categoryChips = useMemo(
   })),
   [rawCategories]
 );
-
+const filteredItems =
+  filterCategory === "All"
+    ? items
+    : items.filter(
+        (item) =>
+          item.category === filterCategory
+      );
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}> 
       <SafeAreaView style={styles.safeArea}>
@@ -545,6 +611,51 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
 
           <View style={[styles.panel, { backgroundColor: theme.surface }]}> 
             <ThemedText type="subtitle">Edit / Delete Vocabulary</ThemedText>
+            <View
+  style={{
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginVertical: 10,
+  }}
+>
+  <Pressable
+    style={[
+      styles.categoryChip,
+      {
+        backgroundColor:
+          filterCategory === "All"
+            ? theme.accent
+            : theme.background,
+      },
+    ]}
+    onPress={() =>
+      setFilterCategory("All")
+    }
+  >
+    <ThemedText>All</ThemedText>
+  </Pressable>
+
+  {(rawCategories || []).map((cat) => (
+    <Pressable
+      key={cat}
+      style={[
+        styles.categoryChip,
+        {
+          backgroundColor:
+            filterCategory === cat
+              ? theme.accent
+              : theme.background,
+        },
+      ]}
+      onPress={() =>
+        setFilterCategory(cat)
+      }
+    >
+      <ThemedText>{cat}</ThemedText>
+    </Pressable>
+  ))}
+</View>
 
             <View
   style={{
@@ -586,6 +697,8 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
       Delete Selected
     </ThemedText>
   </Pressable>
+
+  
 </View>
             <ThemedText type="small" themeColor="textSecondary" style={styles.panelSubtitle}>
               Use edit and delete controls to manage existing entries.
@@ -596,7 +709,7 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
                 No vocabulary items available.
               </ThemedText>
             ) : (
-              items.map((item) => (
+              filteredItems.map((item) => (
                 <View key={item.id} style={[styles.listItem, { backgroundColor: theme.background }]}> 
                   <View style={styles.listText}>
 
@@ -674,15 +787,68 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
             </View>
 
             <View style={styles.categoryList}>
-              {(rawCategories || []).map((item) => (
-                <View key={item} style={[styles.categoryCard, { backgroundColor: theme.background, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}> 
-                  <ThemedText type="default">{item}</ThemedText>
-                  <Pressable onPress={() => removeCategory(item)} style={styles.actionButton}>
-                    <ThemedText type="smallBold" themeColor="accent">Delete</ThemedText>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
+  {(rawCategories || []).map((item) => (
+    <View
+      key={item}
+      style={[
+        styles.categoryCard,
+        {
+          backgroundColor: theme.background,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        },
+      ]}
+    >
+      <ThemedText type="default">
+        {item}
+      </ThemedText>
+
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 8,
+        }}
+      >
+        <Pressable
+          onPress={() =>
+            deleteEntireCategory(item)
+          }
+          style={[
+            styles.actionButton,
+            {
+              backgroundColor: "#EF4444",
+            },
+          ]}
+        >
+          <ThemedText
+            type="smallBold"
+            style={{ color: "#FFFFFF" }}
+          >
+            Delete Words
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          onPress={() =>
+            removeCategory(item)
+          }
+          style={styles.actionButton}
+        >
+          <ThemedText
+            type="smallBold"
+            themeColor="accent"
+          >
+            Delete
+          </ThemedText>
+        </Pressable>
+      </View>
+    </View>
+  ))}
+</View>
+              
+                
+
           </View>
 
           <View style={[styles.panel, { backgroundColor: theme.surface, marginBottom: BottomTabInset + Spacing.four }]}> 

@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState("");
   const [bulkWords, setBulkWords] = useState("");
-
+  const [selectedIds, setSelectedIds] = useState([]);
   useEffect(() => {
     if (initialized && !authenticated) {
       router.replace("/admin");
@@ -217,7 +217,9 @@ setMessage(`${imported} words imported successfully.`);
 const handleDelete = async (itemId) => {
   const confirmed =
     typeof window !== "undefined"
-      ? window.confirm("Delete this vocabulary item permanently?")
+      ? window.confirm(
+          "Delete this vocabulary item permanently?"
+        )
       : true;
 
   if (!confirmed) return;
@@ -238,30 +240,84 @@ const handleDelete = async (itemId) => {
 
     const data = await response.json();
 
-
-
-    
-
-    console.log("DELETE STATUS =", response.status);
-    console.log("DELETE DATA =", data);
-
     if (!response.ok) {
-      throw new Error("Delete failed");
+      throw new Error(
+        data.error || "Delete failed"
+      );
     }
 
     deleteVocabulary(itemId);
 
-    if (editingId === itemId) {
-      resetForm();
-    }
+    await refreshVocabulary();
 
-    setMessage("Vocabulary item deleted successfully.");
+    setMessage("Word deleted successfully.");
   } catch (error) {
-    console.error("DELETE ERROR =", error);
-    setMessage("Failed to delete vocabulary.");
+    console.error(error);
+
+    setMessage(
+      error.message || "Delete failed."
+    );
   }
 };
 
+const toggleSelection = (id) => {
+  setSelectedIds((current) =>
+    current.includes(id)
+      ? current.filter((x) => x !== id)
+      : [...current, id]
+  );
+};
+
+const selectAllWords = () => {
+  setSelectedIds(
+    items.map((item) => item.id)
+  );
+};
+
+const clearSelection = () => {
+  setSelectedIds([]);
+};
+const deleteSelectedWords = async () => {
+  if (selectedIds.length === 0) {
+    setMessage("No words selected.");
+    return;
+  }
+
+  const confirmed =
+    typeof window !== "undefined"
+      ? window.confirm(
+          `Delete ${selectedIds.length} selected words?`
+        )
+      : true;
+
+  if (!confirmed) return;
+
+  try {
+    for (const id of selectedIds) {
+      await fetch(
+        "https://vocab-api-seven.vercel.app/api/vocabulary",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        }
+      );
+
+      deleteVocabulary(id);
+    }
+
+    setSelectedIds([]);
+
+    await refreshVocabulary();
+
+    setMessage("Selected words deleted.");
+  } catch (error) {
+    console.error(error);
+    setMessage("Bulk delete failed.");
+  }
+};
     
 
 const categoryChips = useMemo(
@@ -489,6 +545,48 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
 
           <View style={[styles.panel, { backgroundColor: theme.surface }]}> 
             <ThemedText type="subtitle">Edit / Delete Vocabulary</ThemedText>
+
+            <View
+  style={{
+    flexDirection: "row",
+    gap: 10,
+    flexWrap: "wrap",
+    marginBottom: 15,
+  }}
+>
+  <Pressable
+    style={styles.saveButton}
+    onPress={selectAllWords}
+  >
+    <ThemedText type="smallBold">
+      Select All
+    </ThemedText>
+  </Pressable>
+
+  <Pressable
+    style={styles.saveButton}
+    onPress={clearSelection}
+  >
+    <ThemedText type="smallBold">
+      Clear
+    </ThemedText>
+  </Pressable>
+
+  <Pressable
+    style={[
+      styles.saveButton,
+      { backgroundColor: "#EF4444" },
+    ]}
+    onPress={deleteSelectedWords}
+  >
+    <ThemedText
+      type="smallBold"
+      style={{ color: "#FFFFFF" }}
+    >
+      Delete Selected
+    </ThemedText>
+  </Pressable>
+</View>
             <ThemedText type="small" themeColor="textSecondary" style={styles.panelSubtitle}>
               Use edit and delete controls to manage existing entries.
             </ThemedText>
@@ -501,11 +599,30 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
               items.map((item) => (
                 <View key={item.id} style={[styles.listItem, { backgroundColor: theme.background }]}> 
                   <View style={styles.listText}>
-                    <ThemedText type="smallBold">{item.word}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {item.hindiMeaning} · {item.category}
-                    </ThemedText>
-                  </View>
+
+  <Pressable
+    onPress={() => toggleSelection(item.id)}
+    style={{ marginBottom: 8 }}
+  >
+    <ThemedText>
+      {selectedIds.includes(item.id)
+        ? "☑ Selected"
+        : "☐ Select"}
+    </ThemedText>
+  </Pressable>
+
+  <ThemedText type="smallBold">
+    {item.word}
+  </ThemedText>
+
+  <ThemedText
+    type="small"
+    themeColor="textSecondary"
+  >
+    {item.hindiMeaning} · {item.category}
+  </ThemedText>
+
+</View>
                   <View style={styles.itemActions}>
                     <Pressable
                       style={({ pressed }) => [styles.actionButton, pressed && styles.actionPressed]}
@@ -648,10 +765,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   saveButton: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.three,
-    alignItems: "center",
-  },
+  borderRadius: Spacing.five,
+  paddingVertical: Spacing.three,
+  paddingHorizontal: Spacing.three,
+  alignItems: "center",
+},
   saveText: {
     color: "#fff",
   },

@@ -96,14 +96,15 @@ try {
 
   const data = await response.json();
 
-  console.log("STATUS =", response.status);
-  console.log("DATA =", data);
+console.log("STATUS =", response.status);
+console.log("DATA =", data);
 
-  if (!response.ok) {
-    throw new Error("API failed");
-  }
+if (!response.ok) {
+  setMessage(data.error || "Failed to save vocabulary.");
+  return;
+}
 
-  addVocabulary(payload);
+addVocabulary(payload);
 
 await refreshVocabulary();
 

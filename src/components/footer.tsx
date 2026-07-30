@@ -91,15 +91,14 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   sectionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.four,
-  },
+  flexDirection: "column",
+  gap: Spacing.three,
+  width: "100%",
+},
   sectionItem: {
-    width: "100%",
-    flex: 1,
-    gap: Spacing.one,
-  },
+  width: "100%",
+  gap: Spacing.one,
+},
   copyright: {
     textAlign: "center",
   },

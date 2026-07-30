@@ -85,8 +85,9 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
   },
   content: {
-    gap: Spacing.four,
-  },
+  gap: Spacing.four,
+  width: "100%",
+},
   brandSection: {
     gap: Spacing.one,
   },

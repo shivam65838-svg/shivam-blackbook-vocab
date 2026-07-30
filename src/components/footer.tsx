@@ -46,6 +46,17 @@ export function Footer() {
               Designed for vocabulary learning and retention.
             </ThemedText>
           </View>
+          <View style={styles.sectionItem}>
+  <ThemedText type="smallBold">Support & Contact</ThemedText>
+
+  <ThemedText type="small" themeColor="textSecondary">
+    Email: sklearningplatform@gmail.com
+  </ThemedText>
+
+  <ThemedText type="small" themeColor="textSecondary">
+    We usually respond within 24–48 hours.
+  </ThemedText>
+</View>
         </View>
       </View>
 

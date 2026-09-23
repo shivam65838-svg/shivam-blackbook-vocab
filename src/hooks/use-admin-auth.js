@@ -1,36 +1,9 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "shivam-blackbook-admin-auth";
-const ADMIN_USERNAME = "Shivam";
-const ADMIN_PASSWORD = "spk919695";
-
-const hasLocalStorage =
-  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-
-function readAuthFlag() {
-  if (!hasLocalStorage) {
-    return false;
-  }
-
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function writeAuthFlag(value) {
-  if (!hasLocalStorage) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(STORAGE_KEY, value ? "true" : "false");
-  } catch {
-    // ignore write failures
-  }
-}
+const API_BASE =
+  (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
+  "https://vocab-api-seven.vercel.app/api";
 
 export function useAdminAuth() {
   const router = useRouter();
@@ -38,34 +11,46 @@ export function useAdminAuth() {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    setAuthenticated(readAuthFlag());
-    setInitialized(true);
+    let active = true;
+    fetch(`${API_BASE}/admin`, { credentials: "include" })
+      .then((response) => response.json())
+      .then((data) => {
+        if (active) setAuthenticated(Boolean(data.authenticated));
+      })
+      .catch(() => {
+        if (active) setAuthenticated(false);
+      })
+      .finally(() => {
+        if (active) setInitialized(true);
+      });
+    return () => { active = false; };
   }, []);
 
-  const login = (username, password) => {
-    const validUsername = username?.trim() === ADMIN_USERNAME;
-    const validPassword = password === ADMIN_PASSWORD;
-
-    if (validUsername && validPassword) {
-      writeAuthFlag(true);
-      setAuthenticated(true);
-      return true;
+  const login = async (username, password) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) return false;
+      setAuthenticated(Boolean(data.authenticated));
+      return Boolean(data.authenticated);
+    } catch {
+      return false;
     }
-
-    return false;
   };
 
-  const logout = () => {
-    writeAuthFlag(false);
-    setAuthenticated(false);
-    router.replace("/admin");
+  const logout = async () => {
+    try {
+      await fetch(`${API_BASE}/admin`, { method: "DELETE", credentials: "include" });
+    } finally {
+      setAuthenticated(false);
+      router.replace("/admin");
+    }
   };
 
-  return {
-    authenticated,
-    initialized,
-    login,
-    logout,
-    ADMIN_USERNAME,
-  };
+  return { authenticated, initialized, login, logout };
 }

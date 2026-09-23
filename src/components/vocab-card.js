@@ -12,7 +12,7 @@ import { ThemedText } from "@/components/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-export function VocabCard({ item, status = "New", onLearned, onPending }) {
+export function VocabCard({ item, status = "New", onLearned, onPending, onSwiped }) {
   const theme = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -32,6 +32,7 @@ export function VocabCard({ item, status = "New", onLearned, onPending }) {
           useNativeDriver: false,
         }).start(() => {
           translateX.setValue(0);
+          onSwiped?.(direction > 0 ? "right" : "left");
         });
       } else {
         Animated.spring(translateX, {

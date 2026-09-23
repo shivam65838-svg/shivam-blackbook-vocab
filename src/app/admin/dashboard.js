@@ -37,6 +37,11 @@ export default function AdminDashboard() {
   const [bulkWords, setBulkWords] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
   const [filterCategory, setFilterCategory] = useState("All");
+  const [newCategory, setNewCategory] = useState("");
+
+  useEffect(() => {
+    if (!category && rawCategories?.[0]) setCategory(rawCategories[0]);
+  }, [category, rawCategories]);
   useEffect(() => {
     if (initialized && !authenticated) {
       router.replace("/admin");
@@ -52,7 +57,6 @@ export default function AdminDashboard() {
     setDifficulty("Medium");
     setStatus("New");
     setEditingId(null);
-    setMessage("");
   };
 
   const handleSave = async () => {
@@ -67,53 +71,25 @@ export default function AdminDashboard() {
       hindiMeaning: hindiMeaning.trim(),
       example: example.trim(),
       mnemonic: mnemonic.trim(),
-      category,
+      category: category || "Vocabulary",
       difficulty,
       status,
     };
-try {
-  const response = await fetch(
-  "https://vocab-api-seven.vercel.app/api/vocabulary",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      id: payload.id,
-      word: payload.word,
-      hindi_meaning: payload.hindiMeaning,
-      mnemonic: payload.mnemonic,
-      example: payload.example,
-      category: payload.category,
-      difficulty: payload.difficulty,
-      status: payload.status,
-    }),
-  }
-);
-    
-    
 
-  const data = await response.json();
-
-console.log("STATUS =", response.status);
-console.log("DATA =", data);
-
-if (!response.ok) {
-  setMessage(data.error || "Failed to save vocabulary.");
-  return;
-}
-
-addVocabulary(payload);
-
-await refreshVocabulary();
-
-resetForm();
-setMessage("Vocabulary saved successfully.");
-} catch (error) {
-  console.error("SAVE ERROR =", error);
-  setMessage("Failed to save vocabulary.");
-}
+    try {
+      if (editingId) {
+        await updateVocabulary(payload);
+        setMessage("Vocabulary updated successfully.");
+      } else {
+        await addVocabulary(payload);
+        setMessage("Vocabulary saved successfully.");
+      }
+      resetForm();
+      await refreshVocabulary();
+    } catch (error) {
+      console.error("SAVE ERROR =", error);
+      setMessage(error?.message || "Failed to save vocabulary.");
+    }
   };
 
   const handleEdit = (item) => {
@@ -135,130 +111,58 @@ const handleBulkImport = async () => {
     return;
   }
 
-  const lines = bulkWords
-    .split("\n")
-    .filter((line) => line.trim());
-
+  const lines = bulkWords.split("\n").map((line) => line.trim()).filter(Boolean);
   let imported = 0;
+  let skipped = 0;
 
   for (const line of lines) {
-    const parts = line.split("|");
-
-    if (parts.length < 5) continue;
-
-    const [
-      categoryName,
-      word,
-      hindiMeaning,
-      mnemonic,
-      example,
-    ] = parts.map((p) => p.trim());
-
-    
-
-    if (
-      categoryName &&
-      !(rawCategories || []).includes(categoryName)
-    ) {
-      addCategory(categoryName);
+    const parts = line.split("|").map((part) => part.trim());
+    if (parts.length < 5) {
+      skipped += 1;
+      continue;
+    }
+    const [categoryName, importedWord, importedHindi, importedMnemonic, importedExample] = parts;
+    if (!categoryName || !importedWord || !importedHindi) {
+      skipped += 1;
+      continue;
     }
 
-    const newItem = {
-  id: `bulk-${Date.now()}-${Math.random()}`,
-  word,
-  hindiMeaning,
-  mnemonic,
-  example,
-  category: categoryName,
-  difficulty: "Medium",
-  status: "New",
-};
-
-try {
-  const response = await fetch(
-    
-    "https://vocab-api-seven.vercel.app/api/vocabulary",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: newItem.id,
-        word: newItem.word,
-        hindi_meaning: newItem.hindiMeaning,
-        mnemonic: newItem.mnemonic,
-        example: newItem.example,
-        category: newItem.category,
-        difficulty: newItem.difficulty,
-        status: newItem.status,
-      }),
+    try {
+      if (!(rawCategories || []).includes(categoryName)) {
+        await addCategory(categoryName);
+      }
+      await addVocabulary({
+        id: `bulk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        word: importedWord,
+        hindiMeaning: importedHindi,
+        mnemonic: importedMnemonic,
+        example: importedExample,
+        category: categoryName,
+        difficulty: "Medium",
+        status: "New",
+      });
+      imported += 1;
+    } catch (error) {
+      console.error("Bulk Import Error:", error);
+      skipped += 1;
     }
-  );
-  console.log("IMPORT WORD =", word);
-console.log("STATUS =", response.status);
-
-const data = await response.json();
-console.log("DATA =", data);
-
-  if (response.ok) {
-    addVocabulary(newItem);
-    imported++;
-  }
-} catch (err) {
-  console.error("Bulk Import Error:", err);
-}
   }
 
   await refreshVocabulary();
-
-setBulkWords("");
-setMessage(`${imported} words imported successfully.`);
+  setBulkWords("");
+  setMessage(`${imported} words imported${skipped ? `, ${skipped} skipped` : ""}.`);
 };
 
 const handleDelete = async (itemId) => {
-  const confirmed =
-    typeof window !== "undefined"
-      ? window.confirm(
-          "Delete this vocabulary item permanently?"
-        )
-      : true;
-
+  const confirmed = typeof window !== "undefined" ? window.confirm("Delete this vocabulary item permanently?") : true;
   if (!confirmed) return;
-
   try {
-    const response = await fetch(
-      "https://vocab-api-seven.vercel.app/api/vocabulary",
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: itemId,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Delete failed"
-      );
-    }
-
-    deleteVocabulary(itemId);
-
-    await refreshVocabulary();
-
+    await deleteVocabulary(itemId);
+    setSelectedIds((current) => current.filter((id) => id !== itemId));
     setMessage("Word deleted successfully.");
   } catch (error) {
     console.error(error);
-
-    setMessage(
-      error.message || "Delete failed."
-    );
+    setMessage(error?.message || "Delete failed.");
   }
 };
 
@@ -286,100 +190,44 @@ const clearSelection = () => {
 };
 
 
-  const deleteEntireCategory = async (
-  categoryName
-) => {
-  const categoryWords = items.filter(
-    (item) => item.category === categoryName
-  );
-
-  if (categoryWords.length === 0) {
-    setMessage(
-      `No words found in ${categoryName}`
-    );
-    return;
-  }
-
-  const confirmed =
-    typeof window !== "undefined"
-      ? window.confirm(
-          `Delete entire "${categoryName}" category (${categoryWords.length} words)?`
-        )
-      : true;
-
-  if (!confirmed) return;
-
-  try {
-    for (const word of categoryWords) {
-      await fetch(
-        "https://vocab-api-seven.vercel.app/api/vocabulary",
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: word.id,
-          }),
-        }
-      );
-
-      deleteVocabulary(word.id);
+  const deleteEntireCategory = async (categoryName) => {
+    const categoryWords = items.filter((item) => item.category === categoryName);
+    if (!categoryWords.length) {
+      setMessage(`No words found in ${categoryName}`);
+      return;
     }
-
-    await refreshVocabulary();
-
-    setMessage(
-      `${categoryWords.length} words deleted from ${categoryName}`
-    );
-  } catch (error) {
-    console.error(error);
-    setMessage("Category delete failed.");
-  }
-};
-
-const deleteSelectedWords = async () => {
-  if (selectedIds.length === 0) {
-    setMessage("No words selected.");
-    return;
-  }
-
-  const confirmed =
-    typeof window !== "undefined"
-      ? window.confirm(
-          `Delete ${selectedIds.length} selected words?`
-        )
+    const confirmed = typeof window !== "undefined"
+      ? window.confirm(`Delete entire "${categoryName}" category (${categoryWords.length} words)?`)
       : true;
-
-  if (!confirmed) return;
-
-  try {
-    for (const id of selectedIds) {
-      await fetch(
-        "https://vocab-api-seven.vercel.app/api/vocabulary",
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
-        }
-      );
-
-      deleteVocabulary(id);
+    if (!confirmed) return;
+    try {
+      for (const word of categoryWords) await deleteVocabulary(word.id);
+      await removeCategory(categoryName);
+      setMessage(`${categoryWords.length} words deleted from ${categoryName}`);
+    } catch (error) {
+      console.error(error);
+      setMessage(error?.message || "Category delete failed.");
     }
+  };
 
-    setSelectedIds([]);
-
-    await refreshVocabulary();
-
-    setMessage("Selected words deleted.");
-  } catch (error) {
-    console.error(error);
-    setMessage("Bulk delete failed.");
-  }
-};
-    
+  const deleteSelectedWords = async () => {
+    if (!selectedIds.length) {
+      setMessage("No words selected.");
+      return;
+    }
+    const confirmed = typeof window !== "undefined"
+      ? window.confirm(`Delete ${selectedIds.length} selected words?`)
+      : true;
+    if (!confirmed) return;
+    try {
+      for (const id of selectedIds) await deleteVocabulary(id);
+      setSelectedIds([]);
+      setMessage("Selected words deleted.");
+    } catch (error) {
+      console.error(error);
+      setMessage(error?.message || "Bulk delete failed.");
+    }
+  };
 
 const categoryChips = useMemo(
   () => (rawCategories || []).map((option) => ({
@@ -423,7 +271,7 @@ const filteredItems =
           <View style={[styles.panel, { backgroundColor: theme.surface }]}> 
             <ThemedText type="subtitle">Add Vocabulary</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.panelSubtitle}>
-              Add or edit vocabulary items stored in local browser storage.
+              Add or edit vocabulary items stored in the central vocabulary database. User learning progress remains local to each browser.
             </ThemedText>
 
             <View style={styles.inputGroup}>
@@ -771,15 +619,20 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
                   style={[styles.input, { flex: 1, backgroundColor: theme.background, color: theme.text }]}
                   placeholder="New category"
                   placeholderTextColor={theme.textSecondary}
-                  value={undefined}
-                  onChangeText={() => {}}
+                  value={newCategory}
+                  onChangeText={setNewCategory}
                 />
                 <Pressable
                   style={({ pressed }) => [styles.saveButton, { paddingHorizontal: Spacing.three }]}
-                  onPress={() => {
-                    /* placeholder: adding via prompt to keep implementation small */
-                    const name = typeof window !== "undefined" ? window.prompt("New category label:") : null;
-                    if (name) addCategory(name);
+                  onPress={async () => {
+                    if (!newCategory.trim()) return;
+                    try {
+                      await addCategory(newCategory);
+                      setNewCategory("");
+                      setMessage("Category added successfully.");
+                    } catch (error) {
+                      setMessage(error?.message || "Failed to add category.");
+                    }
                   }}
                 >
                   <ThemedText type="smallBold">Add</ThemedText>

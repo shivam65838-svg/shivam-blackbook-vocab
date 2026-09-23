@@ -1,282 +1,214 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-
-const STORAGE_KEY = "shivam-blackbook-vocab-progress";
-
-const isLocalStorageAvailable = () =>
-  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-
-const readStorage = () => {
-  if (!isLocalStorageAvailable()) {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-};
-
-const writeStorage = (value) => {
-  if (!isLocalStorageAvailable()) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(value)
-    );
-  } catch {
-    // Ignore storage failures.
-  }
-};
-
-const getTodayKey = () => new Date().toISOString().slice(0, 10);
-
-const getId = (item) =>
-  item?.word?.toString().trim().toLowerCase() || "";
-
-const normalizeProgress = (raw) => {
-  const today = getTodayKey();
-  const stored = raw && typeof raw === "object" ? raw : {};
-
-  const dailyTarget =
-    typeof stored.dailyTarget === "number" ? stored.dailyTarget : 30;
-  const learnedIds = Array.isArray(stored.learnedIds)
-    ? stored.learnedIds.filter((id) => typeof id === "string")
-    : [];
-  const pendingIds = Array.isArray(stored.pendingIds)
-    ? stored.pendingIds.filter((id) => typeof id === "string")
-    : [];
-  const lastResetDate =
-    typeof stored.lastResetDate === "string" ? stored.lastResetDate : today;
-  const completedToday =
-    lastResetDate === today ? Number(stored.completedToday) || 0 : 0;
-
-  return {
-    dailyTarget,
-    completedToday,
-    lastResetDate: today,
-    learnedIds: Array.from(new Set(learnedIds)),
-    pendingIds: Array.from(new Set(pendingIds)),
-  };
-};
+import {
+  emitStorageEvent,
+  getLocalDateKey,
+  readJson,
+  shiftDateKey,
+  STORAGE_KEYS,
+  writeJson,
+} from "@/utils/local-storage";
 
 const DEFAULT_STATE = {
   dailyTarget: 30,
   completedToday: 0,
-  lastResetDate: getTodayKey(),
+  lastResetDate: getLocalDateKey(),
+  lastActivityDate: null,
+  currentStreak: 0,
+  longestStreak: 0,
   learnedIds: [],
   pendingIds: [],
+  learnedTodayIds: [],
+  weakIds: [],
+};
+
+const getId = (item) =>
+  item?.id?.toString().trim() || item?.word?.toString().trim().toLowerCase() || "";
+
+const normalizeProgress = (raw) => {
+  const today = getLocalDateKey();
+  const stored = raw && typeof raw === "object" ? raw : {};
+  const lastResetDate =
+    typeof stored.lastResetDate === "string" ? stored.lastResetDate : today;
+  const isSameDay = lastResetDate === today;
+
+  return {
+    dailyTarget:
+      typeof stored.dailyTarget === "number" && stored.dailyTarget > 0
+        ? stored.dailyTarget
+        : 30,
+    completedToday: isSameDay ? Math.max(0, Number(stored.completedToday) || 0) : 0,
+    lastResetDate: today,
+    lastActivityDate:
+      typeof stored.lastActivityDate === "string" ? stored.lastActivityDate : null,
+    currentStreak: Math.max(0, Number(stored.currentStreak) || 0),
+    longestStreak: Math.max(0, Number(stored.longestStreak) || 0),
+    learnedIds: Array.from(
+      new Set(Array.isArray(stored.learnedIds) ? stored.learnedIds.filter(Boolean) : [])
+    ),
+    pendingIds: Array.from(
+      new Set(Array.isArray(stored.pendingIds) ? stored.pendingIds.filter(Boolean) : [])
+    ),
+    learnedTodayIds: isSameDay
+      ? Array.from(new Set(Array.isArray(stored.learnedTodayIds) ? stored.learnedTodayIds.filter(Boolean) : []))
+      : [],
+    weakIds: Array.from(
+      new Set(Array.isArray(stored.weakIds) ? stored.weakIds.filter(Boolean) : [])
+    ),
+  };
+};
+
+const persist = (next) => {
+  writeJson(STORAGE_KEYS.progress, next);
+  emitStorageEvent();
 };
 
 export function useVocabProgress() {
-  const [progress, setProgress] = useState(DEFAULT_STATE);
-  
+  const [progress, setProgress] = useState(() => normalizeProgress(readJson(STORAGE_KEYS.progress)));
+
+  const sync = useCallback(() => {
+    setProgress(normalizeProgress(readJson(STORAGE_KEYS.progress)));
+  }, []);
 
   useEffect(() => {
-  const stored = readStorage();
-  setProgress(normalizeProgress(stored));
-  
-}, []);
+    sync();
+    const onUpdate = () => sync();
+    window.addEventListener("vocab-storage-updated", onUpdate);
+    window.addEventListener("vocab-progress-updated", onUpdate);
+    return () => {
+      window.removeEventListener("vocab-storage-updated", onUpdate);
+      window.removeEventListener("vocab-progress-updated", onUpdate);
+    };
+  }, [sync]);
 
-useEffect(() => {
-  if (typeof window === "undefined") return;
+  const learnedIds = useMemo(() => new Set(progress.learnedIds), [progress.learnedIds]);
+  const pendingIds = useMemo(() => new Set(progress.pendingIds), [progress.pendingIds]);
+  const weakIds = useMemo(() => new Set(progress.weakIds), [progress.weakIds]);
 
-  const syncProgress = () => {
-    const stored = readStorage();
+  const getStatus = useCallback(
+    (item) => {
+      const id = getId(item);
+      if (learnedIds.has(id)) return "Learned";
+      if (pendingIds.has(id)) return "Pending";
+      return "New";
+    },
+    [learnedIds, pendingIds]
+  );
 
-    if (stored) {
-      setProgress(normalizeProgress(stored));
+  const markLearned = useCallback((item) => {
+    const id = getId(item);
+    if (!id) return;
+
+    const today = getLocalDateKey();
+    const learnedToday = new Set(
+      progress.lastResetDate === today ? progress.learnedTodayIds : []
+    );
+    const wasLearnedToday = learnedToday.has(id);
+    learnedToday.add(id);
+
+    let currentStreak = progress.currentStreak;
+    let longestStreak = progress.longestStreak;
+    if (!wasLearnedToday) {
+      if (progress.lastActivityDate === today) {
+        currentStreak = Math.max(1, currentStreak);
+      } else if (progress.lastActivityDate === shiftDateKey(today, -1)) {
+        currentStreak += 1;
+      } else {
+        currentStreak = 1;
+      }
+      longestStreak = Math.max(longestStreak, currentStreak);
     }
+
+    const updated = {
+      ...progress,
+      lastResetDate: today,
+      lastActivityDate: today,
+      currentStreak,
+      longestStreak,
+      learnedIds: Array.from(new Set([...progress.learnedIds, id])),
+      pendingIds: progress.pendingIds.filter((x) => x !== id),
+      learnedTodayIds: Array.from(learnedToday),
+      completedToday: wasLearnedToday
+        ? progress.completedToday
+        : progress.completedToday + 1,
+    };
+
+    setProgress(updated);
+    persist(updated);
+  }, [progress]);
+
+  const markPending = useCallback((item) => {
+    const id = getId(item);
+    if (!id) return;
+
+    const today = getLocalDateKey();
+    const learnedToday = new Set(
+      progress.lastResetDate === today ? progress.learnedTodayIds : []
+    );
+    const wasLearnedToday = learnedToday.delete(id);
+    const updated = {
+      ...progress,
+      lastResetDate: today,
+      pendingIds: Array.from(new Set([...progress.pendingIds, id])),
+      learnedIds: progress.learnedIds.filter((x) => x !== id),
+      learnedTodayIds: Array.from(learnedToday),
+      completedToday: wasLearnedToday
+        ? Math.max(progress.completedToday - 1, 0)
+        : progress.completedToday,
+    };
+
+    setProgress(updated);
+    persist(updated);
+  }, [progress]);
+
+  const setDailyTarget = useCallback((value) => {
+    const updated = {
+      ...progress,
+      dailyTarget: Math.min(200, Math.max(5, Number(value) || 30)),
+    };
+    setProgress(updated);
+    persist(updated);
+  }, [progress]);
+
+  const markQuizWrong = useCallback((ids) => {
+    const validIds = Array.isArray(ids) ? ids.filter(Boolean) : [];
+    if (!validIds.length) return;
+
+    const updated = {
+      ...progress,
+      weakIds: Array.from(new Set([...progress.weakIds, ...validIds])),
+    };
+    setProgress(updated);
+    persist(updated);
+  }, [progress]);
+
+  const clearWeakWord = useCallback((id) => {
+    const updated = {
+      ...progress,
+      weakIds: progress.weakIds.filter((x) => x !== id),
+    };
+    setProgress(updated);
+    persist(updated);
+  }, [progress]);
+
+  return {
+    ...progress,
+    learnedCount: learnedIds.size,
+    pendingCount: pendingIds.size,
+    weakCount: weakIds.size,
+    remainingToday: Math.max(progress.dailyTarget - progress.completedToday, 0),
+    completionRate:
+      progress.dailyTarget > 0
+        ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)
+        : 0,
+    learnedIds,
+    pendingIds,
+    weakIds,
+    getStatus,
+    markLearned,
+    markPending,
+    setDailyTarget,
+    markQuizWrong,
+    clearWeakWord,
   };
-
-  window.addEventListener(
-    "vocab-progress-updated",
-    syncProgress
-  );
-
-  return () => {
-    window.removeEventListener(
-      "vocab-progress-updated",
-      syncProgress
-    );
-  };
-}, []);
-
-
-  const learnedIds = useMemo(
-    () => new Set(progress.learnedIds),
-    [progress.learnedIds],
-  );
-  const pendingIds = useMemo(
-    () => new Set(progress.pendingIds),
-    [progress.pendingIds],
-  );
-
-  const [totalWords, setTotalWords] = useState(0);
-
-useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  try {
-    const raw = localStorage.getItem(
-      "shivam-blackbook-vocab-data"
-    );
-
-    if (raw) {
-  const items = JSON.parse(raw);
-
-  
-
-  setTotalWords(items.length);
 }
-  } catch (error) {
-    console.log(error);
-  }
-}, []);
-  const learnedCount = learnedIds.size;
-  const pendingCount = pendingIds.size;
-  
-  const remainingToday = Math.max(
-    progress.dailyTarget - progress.completedToday,
-    0,
-  );
-  const completionRate =
-    progress.dailyTarget > 0
-      ? Math.min(Math.max(progress.completedToday / progress.dailyTarget, 0), 1)
-      : 0;
-
-      
-      
-const getStatus = (item) => {
-  const id = getId(item);
-
-  
-
-  if (learnedIds.has(id)) return "Learned";
-
-  if (pendingIds.has(id)) return "Pending";
-
-  return "New";
-};
-
-const markLearned = (item) => {
-  const id = getId(item);
-
-  if (!id) return;
-
-  setProgress((current) => {
-    const alreadyLearned =
-      current.learnedIds.includes(id);
-
-    const updated = {
-      ...current,
-      learnedIds: [
-        ...new Set([...current.learnedIds, id]),
-      ],
-      pendingIds: current.pendingIds.filter(
-        (x) => x !== id
-      ),
-      completedToday: alreadyLearned
-        ? current.completedToday
-        : current.completedToday + 1,
-    };
-
-    writeStorage(updated);
-
-    window.dispatchEvent(
-      new CustomEvent("vocab-progress-updated")
-    );
-
-    return updated;
-  });
-};
-const markPending = (item) => {
-  const id = getId(item);
-
-  if (!id) return;
-
-  setProgress((current) => {
-    const wasLearned =
-      current.learnedIds.includes(id);
-
-    const updated = {
-      ...current,
-      pendingIds: [
-        ...new Set([...current.pendingIds, id]),
-      ],
-      learnedIds: current.learnedIds.filter(
-        (x) => x !== id
-      ),
-      completedToday: wasLearned
-        ? Math.max(current.completedToday - 1, 0)
-        : current.completedToday,
-    };
-
-    writeStorage(updated);
-
-    window.dispatchEvent(
-      new CustomEvent("vocab-progress-updated")
-    );
-
-    return updated;
-  });
-};
-    
-
-  const setDailyTarget = (value) => {
-  setProgress((current) => {
-    const updated = {
-      ...current,
-      dailyTarget: Number(value) || 30,
-    };
-
-    writeStorage(updated);
-
-    window.dispatchEvent(
-      new CustomEvent("vocab-progress-updated")
-    );
-
-    return updated;
-  });
-};
-
-
-
- return {
-  ...progress,
-  totalWords,
-  learnedCount,
-  pendingCount,
-  remainingToday,
-  completionRate,
-  getStatus,
-  markLearned,
-  markPending,
-  setDailyTarget,
-  
-};
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -11,88 +11,37 @@ import { useTheme } from "@/hooks/use-theme";
 export default function AdminLogin() {
   const theme = useTheme();
   const router = useRouter();
-  const { authenticated, initialized, login, ADMIN_USERNAME } = useAdminAuth();
-  const [username, setUsername] = useState(ADMIN_USERNAME);
+  const { authenticated, initialized, login } = useAdminAuth();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (initialized && authenticated) {
-      router.replace("/admin/dashboard");
-    }
+    if (initialized && authenticated) router.replace("/admin/dashboard");
   }, [authenticated, initialized, router]);
 
-  const handleLogin = () => {
-    const success = login(username, password);
-    if (success) {
-      router.replace("/admin/dashboard");
-      return;
-    }
-
-    setError("Invalid username or password.");
+  const handleLogin = async () => {
+    setBusy(true);
+    setError("");
+    const success = await login(username, password);
+    setBusy(false);
+    if (success) router.replace("/admin/dashboard");
+    else setError("Invalid username or password, or the admin API is not configured.");
   };
 
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}> 
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.formCard}>
-          <ThemedText type="subtitle" style={styles.title}>
-            Admin Login
-          </ThemedText>
-          <ThemedText type="default" themeColor="textSecondary" style={styles.subtitle}>
-            Enter credentials to manage vocabulary, categories, and quiz content.
-          </ThemedText>
-
-          <View style={styles.inputGroup}>
-            <ThemedText type="smallBold">Username</ThemedText>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Shivam"
-              placeholderTextColor={theme.textSecondary}
-              autoCapitalize="none"
-              accessibilityLabel="Admin username"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <ThemedText type="smallBold">Password</ThemedText>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor={theme.textSecondary}
-              secureTextEntry
-              accessibilityLabel="Admin password"
-            />
-          </View>
-
-          {error ? (
-            <ThemedText type="default" themeColor="accent" style={styles.errorText}>
-              {error}
-            </ThemedText>
-          ) : null}
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.loginButton,
-              { backgroundColor: theme.accent, opacity: pressed ? 0.8 : 1 },
-            ]}
-            onPress={handleLogin}
-            accessibilityLabel="Login as admin"
-          >
-            <ThemedText type="smallBold" style={styles.loginText}>
-              Login
-            </ThemedText>
+        <View style={[styles.formCard, { backgroundColor: theme.surface }]}>
+          <ThemedText type="subtitle">Admin Login</ThemedText>
+          <ThemedText type="default" themeColor="textSecondary">Admin credentials are verified on the server. They are not stored in the website source code.</ThemedText>
+          <TextInput style={[styles.input, { backgroundColor: theme.background, color: theme.text }]} value={username} onChangeText={setUsername} placeholder="Username" placeholderTextColor={theme.textSecondary} autoCapitalize="none" />
+          <TextInput style={[styles.input, { backgroundColor: theme.background, color: theme.text }]} value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor={theme.textSecondary} secureTextEntry />
+          {error ? <ThemedText themeColor="accent">{error}</ThemedText> : null}
+          <Pressable disabled={busy} style={[styles.loginButton, { backgroundColor: theme.accent, opacity: busy ? 0.6 : 1 }]} onPress={handleLogin}>
+            <ThemedText type="smallBold">{busy ? "Signing in…" : "Login"}</ThemedText>
           </Pressable>
-
-          <View style={styles.noteRow}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Admin credentials are hidden from normal navigation.
-            </ThemedText>
-          </View>
         </View>
       </SafeAreaView>
     </ThemedView>
@@ -100,50 +49,8 @@ export default function AdminLogin() {
 }
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: Spacing.four,
-  },
-  formCard: {
-    width: "100%",
-    maxWidth: 540,
-    borderRadius: Spacing.five,
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  title: {
-    marginBottom: Spacing.two,
-  },
-  subtitle: {
-    marginBottom: Spacing.four,
-    lineHeight: 22,
-  },
-  inputGroup: {
-    gap: Spacing.one,
-  },
-  input: {
-    borderRadius: Spacing.five,
-    padding: Spacing.three,
-    fontSize: 16,
-  },
-  loginButton: {
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.three,
-    alignItems: "center",
-    marginTop: Spacing.four,
-  },
-  loginText: {
-    color: "#fff",
-  },
-  errorText: {
-    marginTop: Spacing.one,
-  },
-  noteRow: {
-    marginTop: Spacing.four,
-  },
+  page: { flex: 1 }, safeArea: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: Spacing.four },
+  formCard: { width: "100%", maxWidth: 540, borderRadius: Spacing.five, padding: Spacing.four, gap: Spacing.three },
+  input: { borderRadius: Spacing.five, padding: Spacing.three, fontSize: 16 },
+  loginButton: { borderRadius: Spacing.five, paddingVertical: Spacing.three, alignItems: "center" },
 });

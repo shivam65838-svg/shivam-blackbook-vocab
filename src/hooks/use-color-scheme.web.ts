@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { useColorScheme as useRNColorScheme } from "react-native";
 
-/**
- * To support static rendering, this value needs to be re-calculated on the client side for web
- */
+import { readJson, STORAGE_KEYS } from "@/utils/local-storage";
+
 export function useColorScheme() {
+  const systemScheme = useRNColorScheme();
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [appearance, setAppearance] = useState(() => readJson(STORAGE_KEYS.settings, {})?.appearance || "system");
 
   useEffect(() => {
     setHasHydrated(true);
+    const sync = () => setAppearance(readJson(STORAGE_KEYS.settings, {})?.appearance || "system");
+    window.addEventListener("vocab-settings-updated", sync);
+    return () => window.removeEventListener("vocab-settings-updated", sync);
   }, []);
 
-  const colorScheme = useRNColorScheme();
-
-  if (hasHydrated) {
-    return colorScheme;
-  }
-
-  return "light";
+  if (!hasHydrated) return "light";
+  if (appearance === "dark" || appearance === "light") return appearance;
+  return systemScheme || "light";
 }

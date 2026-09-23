@@ -42,6 +42,10 @@ export default function AppTabs() {
           <TabTrigger name="revision" href={asHref("/revision")} asChild>
             <TabButton>🔄 Revision</TabButton>
           </TabTrigger>
+
+          <TabTrigger name="settings" href={asHref("/settings")} asChild>
+            <TabButton>⚙️ Settings</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>

@@ -20,29 +20,19 @@ const getPrompt = (item, mode) => {
   return item.word;
 };
 
-const normalizeCategory = (value) =>
-  value?.toString().trim().toLowerCase().replace(/s$/, "") || "";
-
-const getCategoryAnswer = (item, mode) => {
-  const category = normalizeCategory(item.category);
-  const targetCategory = mode === "Synonym" ? "synonym" : "antonym";
-  if (category !== targetCategory) return null;
-  return item.hindiMeaning?.toString().trim() || null;
-};
-
 const getCorrect = (item, mode) => {
   if (mode === "Hindi → English") return item.word?.trim() || null;
   if (mode === "Synonym") {
     const value = Array.isArray(item.synonyms)
       ? item.synonyms.find((entry) => entry?.toString().trim())
       : null;
-    return value?.toString().trim() || getCategoryAnswer(item, mode);
+    return value?.toString().trim() || null;
   }
   if (mode === "Antonym") {
     const value = Array.isArray(item.antonyms)
       ? item.antonyms.find((entry) => entry?.toString().trim())
       : null;
-    return value?.toString().trim() || getCategoryAnswer(item, mode);
+    return value?.toString().trim() || null;
   }
   return item.hindiMeaning?.toString().trim() || null;
 };

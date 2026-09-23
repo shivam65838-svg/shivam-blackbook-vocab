@@ -7,7 +7,13 @@ export const STORAGE_KEYS = {
 export const isStorageAvailable = () =>
   typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
-export const readJson = (key, fallback = null) => {
+/**
+ * @template T
+ * @param {string} key
+ * @param {T} fallback
+ * @returns {T}
+ */
+export const readJson = (key, fallback) => {
   if (!isStorageAvailable()) return fallback;
   try {
     const raw = window.localStorage.getItem(key);

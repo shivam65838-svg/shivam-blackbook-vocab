@@ -1,12 +1,6 @@
+import { getApiBase } from "@/utils/api";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-
-const API_BASE =
-  (typeof process !== "undefined" &&
-    process.env?.EXPO_PUBLIC_API_URL) ||
-  (typeof window !== "undefined"
-    ? `${window.location.origin}/api`
-    : "https://shivam-blackbook-vocab.vercel.app/api");
 
 export function useAdminAuth() {
   const router = useRouter();
@@ -16,7 +10,7 @@ export function useAdminAuth() {
   useEffect(() => {
     let active = true;
 
-    fetch(`${API_BASE}/admin`, {
+    fetch(`${getApiBase()}/admin`, {
       credentials: "include",
     })
       .then((response) => response.json())
@@ -43,7 +37,7 @@ export function useAdminAuth() {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch(`${API_BASE}/admin`, {
+      const response = await fetch(`${getApiBase()}/admin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +66,7 @@ export function useAdminAuth() {
 
   const logout = async () => {
     try {
-      await fetch(`${API_BASE}/admin`, {
+      await fetch(`${getApiBase()}/admin`, {
         method: "DELETE",
         credentials: "include",
       });

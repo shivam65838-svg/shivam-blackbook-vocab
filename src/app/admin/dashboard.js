@@ -38,6 +38,7 @@ export default function AdminDashboard() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [filterCategory, setFilterCategory] = useState("All");
   const [newCategory, setNewCategory] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!category && rawCategories?.[0]) setCategory(rawCategories[0]);
@@ -166,6 +167,28 @@ const handleDelete = async (itemId) => {
   }
 };
 
+const refreshAdminData = async () => {
+  setRefreshing(true);
+  try {
+    await refreshVocabulary();
+    setMessage("Vocabulary refreshed from the production database.");
+  } catch (error) {
+    setMessage(error?.message || "Refresh failed.");
+  } finally {
+    setRefreshing(false);
+  }
+};
+
+const confirmBulkDelete = (count, label) => {
+  if (typeof window === "undefined") return false;
+
+  const confirmation = window.prompt(
+    `This will permanently delete ${count} vocabulary record${count === 1 ? "" : "s"} ${label}. Type DELETE to continue.`
+  );
+
+  return confirmation === "DELETE";
+};
+
 const toggleSelection = (id) => {
   setSelectedIds((current) =>
     current.includes(id)
@@ -196,13 +219,11 @@ const clearSelection = () => {
       setMessage(`No words found in ${categoryName}`);
       return;
     }
-    const confirmed = typeof window !== "undefined"
-      ? window.confirm(`Delete entire "${categoryName}" category (${categoryWords.length} words)?`)
-      : true;
-    if (!confirmed) return;
+    if (!confirmBulkDelete(categoryWords.length, `in category "${categoryName}"`)) return;
     try {
       for (const word of categoryWords) await deleteVocabulary(word.id);
       await removeCategory(categoryName);
+      await refreshVocabulary();
       setMessage(`${categoryWords.length} words deleted from ${categoryName}`);
     } catch (error) {
       console.error(error);
@@ -215,13 +236,11 @@ const clearSelection = () => {
       setMessage("No words selected.");
       return;
     }
-    const confirmed = typeof window !== "undefined"
-      ? window.confirm(`Delete ${selectedIds.length} selected words?`)
-      : true;
-    if (!confirmed) return;
+    if (!confirmBulkDelete(selectedIds.length, "from the current selection")) return;
     try {
       for (const id of selectedIds) await deleteVocabulary(id);
       setSelectedIds([]);
+      await refreshVocabulary();
       setMessage("Selected words deleted.");
     } catch (error) {
       console.error(error);
@@ -460,6 +479,18 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
 
           <View style={[styles.panel, { backgroundColor: theme.surface }]}> 
             <ThemedText type="subtitle">Edit / Delete Vocabulary</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {filteredItems.length} of {items.length} production records shown
+            </ThemedText>
+            <Pressable
+              disabled={refreshing}
+              style={[styles.saveButton, { opacity: refreshing ? 0.6 : 1 }]}
+              onPress={refreshAdminData}
+            >
+              <ThemedText type="smallBold">
+                {refreshing ? "Refreshing..." : "Refresh from production API"}
+              </ThemedText>
+            </Pressable>
             <View
   style={{
     flexDirection: "row",

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { getApiBase } from "@/utils/api";
 import { removeKey } from "@/utils/local-storage";
 
 // ============================================================
@@ -8,28 +9,6 @@ import { removeKey } from "@/utils/local-storage";
 // Master vocabulary always comes from Neon through the Vercel API.
 // User-specific learning data remains in browser localStorage.
 // ============================================================
-
-const DEPLOYED_API_BASE =
-  "https://shivam-blackbook-vocab.vercel.app/api";
-
-const getApiBase = () => {
-  if (typeof window === "undefined") {
-    return "/api";
-  }
-
-  const hostname = window.location.hostname;
-
-  const isLocalBrowser =
-    hostname === "localhost" || hostname === "127.0.0.1";
-
-  // Local Expo web testing uses the live Vercel API.
-  if (isLocalBrowser) {
-    return DEPLOYED_API_BASE;
-  }
-
-  // Production website uses its own /api routes.
-  return `${window.location.origin}/api`;
-};
 
 // ============================================================
 // NORMALIZE ONE VOCABULARY ITEM
@@ -44,15 +23,16 @@ const normalizeItem = (item = {}) => ({
 
   word: item.word?.toString().trim() || "",
 
-  hindiMeaning:
+  hindiMeaning: String(
     item.hindiMeaning ??
-    item.hindi_meaning ??
-    item.meaning ??
-    "",
+      item.hindi_meaning ??
+      item.meaning ??
+      ""
+  ).trim(),
 
-  mnemonic: item.mnemonic ?? "",
+  mnemonic: item.mnemonic?.toString() || "",
 
-  example: item.example ?? "",
+  example: item.example?.toString() || "",
 
   category:
     item.category?.toString().trim() ||
@@ -63,7 +43,7 @@ const normalizeItem = (item = {}) => ({
       ? item.difficulty
       : "Medium",
 
-  status: item.status || "New",
+  status: item.status?.toString() || "New",
 
   synonyms: Array.isArray(item.synonyms)
     ? item.synonyms
@@ -613,15 +593,19 @@ export function useVocabularyData() {
   // CATEGORY LIST
   // ==========================================================
 
-  const categories = useMemo(
-    () => [
+  const categories = useMemo(() => {
+    const names = [
+      ...categoriesState,
+      ...items.map((item) => item.category),
+    ].filter(Boolean);
+
+    return [
       "All",
-      ...categoriesState.filter(
+      ...Array.from(new Set(names)).filter(
         (item) => item !== "All"
       ),
-    ],
-    [categoriesState]
-  );
+    ];
+  }, [categoriesState, items]);
 
   // ==========================================================
   // RETURN

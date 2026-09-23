@@ -24,7 +24,15 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const result = await pool.query("SELECT * FROM categories ORDER BY name ASC");
+      const result = await pool.query(
+        `SELECT name
+         FROM categories
+         UNION
+         SELECT DISTINCT BTRIM(category) AS name
+         FROM vocabulary
+         WHERE category IS NOT NULL AND BTRIM(category) <> ''
+         ORDER BY name ASC`
+      );
       return res.status(200).json(result.rows);
     }
 

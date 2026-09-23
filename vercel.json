@@ -1,8 +1,16 @@
 {
-  "rewrites": [
+  "framework": null,
+  "buildCommand": "npx expo export -p web",
+  "outputDirectory": "dist",
+  "headers": [
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
     }
   ]
 }

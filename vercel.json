@@ -15,11 +15,7 @@
   ],
   "rewrites": [
     {
-      "source": "/admin",
-      "destination": "/"
-    },
-    {
-      "source": "/admin/:path*",
+      "source": "/((?!api(?:/|$)).*)",
       "destination": "/"
     }
   ]

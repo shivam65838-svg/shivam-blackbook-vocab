@@ -6,25 +6,42 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, Spacing } from "@/constants/theme";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { useAdminVocabularyData } from "@/hooks/use-admin-vocabulary-data";
 import { useTheme } from "@/hooks/use-theme";
-import { useVocabularyData } from "@/hooks/use-vocabulary-data";
 
 
 export default function AdminDashboard() {
   const theme = useTheme();
   const router = useRouter();
   const { authenticated, initialized, logout } = useAdminAuth();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [filterDifficulty, setFilterDifficulty] = useState("All");
   const {
-  items,
-  addVocabulary,
-  updateVocabulary,
-  deleteVocabulary,
-  categories,
-  rawCategories,
-  addCategory,
-  removeCategory,
-  refreshVocabulary,
-} = useVocabularyData();
+    items,
+    total,
+    totalPages,
+    stats,
+    loading,
+    error: dataError,
+    rawCategories,
+    addVocabulary,
+    updateVocabulary,
+    deleteVocabulary,
+    bulkAddVocabulary,
+    bulkDeleteVocabulary,
+    deleteCategoryVocabulary,
+    addCategory,
+    removeCategory,
+    loadPage,
+  } = useAdminVocabularyData({
+    page,
+    search,
+    category: filterCategory,
+    difficulty: filterDifficulty,
+  });
   const [word, setWord] = useState("");
   const [hindiMeaning, setHindiMeaning] = useState("");
   const [example, setExample] = useState("");
@@ -36,9 +53,16 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [bulkWords, setBulkWords] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
-  const [filterCategory, setFilterCategory] = useState("All");
   const [newCategory, setNewCategory] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      setSearch(searchInput.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     if (!category && rawCategories?.[0]) setCategory(rawCategories[0]);
@@ -86,7 +110,7 @@ export default function AdminDashboard() {
         setMessage("Vocabulary saved successfully.");
       }
       resetForm();
-      await refreshVocabulary();
+      setPage(1);
     } catch (error) {
       console.error("SAVE ERROR =", error);
       setMessage(error?.message || "Failed to save vocabulary.");
@@ -116,6 +140,7 @@ const handleBulkImport = async () => {
   let imported = 0;
   let skipped = 0;
 
+  const payload = [];
   for (const line of lines) {
     const parts = line.split("|").map((part) => part.trim());
     if (parts.length < 5) {
@@ -132,7 +157,7 @@ const handleBulkImport = async () => {
       if (!(rawCategories || []).includes(categoryName)) {
         await addCategory(categoryName);
       }
-      await addVocabulary({
+      payload.push({
         id: `bulk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         word: importedWord,
         hindiMeaning: importedHindi,
@@ -142,14 +167,20 @@ const handleBulkImport = async () => {
         difficulty: "Medium",
         status: "New",
       });
-      imported += 1;
     } catch (error) {
       console.error("Bulk Import Error:", error);
       skipped += 1;
     }
   }
 
-  await refreshVocabulary();
+  try {
+    const result = await bulkAddVocabulary(payload);
+    imported = result.imported || 0;
+    skipped += result.skipped || 0;
+  } catch (error) {
+    skipped += payload.length;
+    setMessage(error?.message || "Bulk import failed.");
+  }
   setBulkWords("");
   setMessage(`${imported} words imported${skipped ? `, ${skipped} skipped` : ""}.`);
 };
@@ -170,7 +201,7 @@ const handleDelete = async (itemId) => {
 const refreshAdminData = async () => {
   setRefreshing(true);
   try {
-    await refreshVocabulary();
+    await loadPage();
     setMessage("Vocabulary refreshed from the production database.");
   } catch (error) {
     setMessage(error?.message || "Refresh failed.");
@@ -214,17 +245,14 @@ const clearSelection = () => {
 
 
   const deleteEntireCategory = async (categoryName) => {
-    const categoryWords = items.filter((item) => item.category === categoryName);
-    if (!categoryWords.length) {
-      setMessage(`No words found in ${categoryName}`);
-      return;
-    }
-    if (!confirmBulkDelete(categoryWords.length, `in category "${categoryName}"`)) return;
+    if (!confirmBulkDelete(
+      "all",
+      `in category "${categoryName}". This cannot be undone`
+    )) return;
     try {
-      for (const word of categoryWords) await deleteVocabulary(word.id);
+      const result = await deleteCategoryVocabulary(categoryName);
       await removeCategory(categoryName);
-      await refreshVocabulary();
-      setMessage(`${categoryWords.length} words deleted from ${categoryName}`);
+      setMessage(`${result.deletedCount || 0} words deleted from ${categoryName}`);
     } catch (error) {
       console.error(error);
       setMessage(error?.message || "Category delete failed.");
@@ -238,9 +266,8 @@ const clearSelection = () => {
     }
     if (!confirmBulkDelete(selectedIds.length, "from the current selection")) return;
     try {
-      for (const id of selectedIds) await deleteVocabulary(id);
+      await bulkDeleteVocabulary(selectedIds);
       setSelectedIds([]);
-      await refreshVocabulary();
       setMessage("Selected words deleted.");
     } catch (error) {
       console.error(error);
@@ -254,13 +281,7 @@ const categoryChips = useMemo(
   })),
   [rawCategories]
 );
-const filteredItems =
-  filterCategory === "All"
-    ? items
-    : items.filter(
-        (item) =>
-          item.category === filterCategory
-      );
+const filteredItems = items;
   return (
     <ThemedView style={[styles.page, { backgroundColor: theme.background }]}> 
       <SafeAreaView style={styles.safeArea}>
@@ -480,8 +501,25 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
           <View style={[styles.panel, { backgroundColor: theme.surface }]}> 
             <ThemedText type="subtitle">Edit / Delete Vocabulary</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {filteredItems.length} of {items.length} production records shown
+              Showing {filteredItems.length} of {total} matching records · {stats.total || total} total vocabulary
             </ThemedText>
+            <View style={styles.statsRow}>
+              <ThemedText type="smallBold">Total: {stats.total || total}</ThemedText>
+              <ThemedText type="smallBold">Categories: {stats.categories || 0}</ThemedText>
+              {(stats.difficulties || []).map((item) => (
+                <ThemedText key={item.difficulty || "unknown"} type="smallBold">
+                  {item.difficulty || "Unknown"}: {item.count}
+                </ThemedText>
+              ))}
+            </View>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
+              value={searchInput}
+              onChangeText={setSearchInput}
+              placeholder="Search word, meaning, mnemonic, or example"
+              placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Search vocabulary"
+            />
             <Pressable
               disabled={refreshing}
               style={[styles.saveButton, { opacity: refreshing ? 0.6 : 1 }]}
@@ -510,7 +548,7 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
       },
     ]}
     onPress={() =>
-      setFilterCategory("All")
+      (setFilterCategory("All"), setPage(1))
     }
   >
     <ThemedText>All</ThemedText>
@@ -529,13 +567,31 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
         },
       ]}
       onPress={() =>
-        setFilterCategory(cat)
+        (setFilterCategory(cat), setPage(1))
       }
     >
       <ThemedText>{cat}</ThemedText>
     </Pressable>
   ))}
 </View>
+
+  <View style={styles.chipRow}>
+    {['All', 'Easy', 'Medium', 'Hard'].map((option) => (
+      <Pressable
+        key={option}
+        style={[
+          styles.categoryChip,
+          { backgroundColor: filterDifficulty === option ? theme.accent : theme.background },
+        ]}
+        onPress={() => {
+          setFilterDifficulty(option);
+          setPage(1);
+        }}
+      >
+        <ThemedText type="smallBold">{option}</ThemedText>
+      </Pressable>
+    ))}
+  </View>
 
             <View
   style={{
@@ -584,7 +640,15 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
               Use edit and delete controls to manage existing entries.
             </ThemedText>
 
-            {items.length === 0 ? (
+            {loading ? (
+              <ThemedText type="default" themeColor="textSecondary" style={styles.emptyText}>
+                Loading page {page}...
+              </ThemedText>
+            ) : dataError ? (
+              <ThemedText type="default" themeColor="accent" style={styles.emptyText}>
+                {dataError}
+              </ThemedText>
+            ) : items.length === 0 ? (
               <ThemedText type="default" themeColor="textSecondary" style={styles.emptyText}>
                 No vocabulary items available.
               </ThemedText>
@@ -635,6 +699,25 @@ Root Words|Aqua|जल|Aqua means water|Aquarium contains water.`}
                 </View>
               ))
             )}
+            <View style={styles.paginationRow}>
+              <Pressable
+                disabled={page <= 1 || loading}
+                style={[styles.actionButton, { opacity: page <= 1 || loading ? 0.45 : 1 }]}
+                onPress={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                <ThemedText type="smallBold">Previous</ThemedText>
+              </Pressable>
+              <ThemedText type="smallBold">
+                Page {page} of {totalPages} · {total} records
+              </ThemedText>
+              <Pressable
+                disabled={page >= totalPages || loading}
+                style={[styles.actionButton, { opacity: page >= totalPages || loading ? 0.45 : 1 }]}
+                onPress={() => setPage((current) => Math.min(totalPages, current + 1))}
+              >
+                <ThemedText type="smallBold">Next</ThemedText>
+              </Pressable>
+            </View>
           </View>
 
           <View style={[styles.panel, { backgroundColor: theme.surface }]}> 
@@ -859,6 +942,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.two,
+  },
+  statsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.three,
+  },
+  paginationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.two,
+    marginTop: Spacing.three,
   },
   categoryCard: {
     borderRadius: Spacing.five,

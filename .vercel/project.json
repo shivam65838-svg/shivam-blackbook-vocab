@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_65xCXNOwSkns5Q4WZgn8yrzttQJe",
+  "orgId": "team_0AzvXhALS0M7UvlULQYnewAx",
+  "projectName": "shivam-blackbook-vocab",
+  "settings": {
+    "createdAt": 1780063432336,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": "npm install",
+    "buildCommand": "npx expo export -p web",
+    "outputDirectory": "dist",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

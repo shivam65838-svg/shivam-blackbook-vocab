@@ -1,11 +1,11 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRef } from "react";
 import {
-  Animated,
-  PanResponder,
-  Pressable,
-  StyleSheet,
-  View,
+    Animated,
+    PanResponder,
+    Pressable,
+    StyleSheet,
+    View,
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -65,28 +65,28 @@ const isPending =
       {...panResponder.panHandlers}
     >
       <LinearGradient
-        colors={[theme.accent, "#1F2434"]}
+        colors={["#22D3EE", "#2563EB", "#312E81"]}
         start={[0, 0]}
-        end={[1, 1]}
+        end={[1, 0]}
         style={styles.gradient}
       >
         <View style={styles.categoryRow}>
           <ThemedText
             type="smallBold"
             style={styles.category}
-            themeColor="text"
           >
             {item.category}
           </ThemedText>
           <View style={[styles.statusPill, { backgroundColor: statusColor }]}>
-           <ThemedText type="smallBold" style={styles.statusText}>
-  STATUS: {status}
-</ThemedText>
+            <ThemedText type="smallBold" style={styles.statusText}>
+              {status}
+            </ThemedText>
           </View>
         </View>
         <ThemedText type="title" style={styles.word}>
           {item.word}
         </ThemedText>
+        <View style={styles.wordUnderline} />
       </LinearGradient>
 
       <View style={styles.detailBlock}>
@@ -165,19 +165,22 @@ const isPending =
 const styles = StyleSheet.create({
   card: {
     width: "100%",
-    borderRadius: Spacing.five,
-    padding: Spacing.four,
+    borderRadius: 24,
+    overflow: "hidden",
     marginRight: 0,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 5,
+    shadowColor: "#102A72",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 6,
+    backgroundColor: "#FFFFFF",
   },
   gradient: {
-    borderRadius: Spacing.five,
-    padding: Spacing.four,
-    marginBottom: Spacing.four,
+    minHeight: 190,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.four,
     gap: Spacing.two,
+    justifyContent: "space-between",
   },
   categoryRow: {
     flexDirection: "row",
@@ -187,36 +190,53 @@ const styles = StyleSheet.create({
   },
   category: {
     textTransform: "uppercase",
-    letterSpacing: 1,
+    color: "rgba(255,255,255,0.84)",
+    letterSpacing: 0,
   },
   statusPill: {
     borderRadius: 999,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
+    backgroundColor: "rgba(15,23,42,0.32)",
   },
   statusText: {
     color: "#FFFFFF",
+    textTransform: "uppercase",
   },
   word: {
-    fontSize: 42,
-    lineHeight: 48,
+    color: "#FFFFFF",
+    fontSize: 48,
+    fontWeight: "800",
+    lineHeight: 54,
+    letterSpacing: 0,
+    maxWidth: "100%",
+  },
+  wordUnderline: {
+    width: 54,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.88)",
   },
   detailBlock: {
     gap: Spacing.one,
-    marginBottom: Spacing.three,
+    marginHorizontal: Spacing.four,
+    marginTop: Spacing.three,
   },
   meaning: {
-    fontSize: 24,
+    fontSize: 23,
     lineHeight: 30,
+    fontWeight: "700",
   },
   actionRow: {
     flexDirection: "row",
     gap: Spacing.two,
+    padding: Spacing.four,
+    paddingTop: Spacing.two,
   },
   actionButton: {
     flex: 1,
-    borderRadius: Spacing.five,
-    paddingVertical: Spacing.three,
+    borderRadius: 14,
+    paddingVertical: Spacing.two,
     alignItems: "center",
   },
 });
